@@ -285,7 +285,7 @@ pip_mapping_to_hash(PyObject *map)
 		key = PySequence_GetItem(keys, i);
 		if (key) {
 			/* Get the string representation of the key */
-			if (PyString_AsStringAndSize(key, &key_name, &key_len) != -1) {
+			if (pip_str(key, &key_name, &key_len) != -1) {
 				/* Extract the item for this key */
 				item = PyMapping_GetItemString(map, key_name);
 				if (item) {
@@ -444,6 +444,24 @@ PyObject * pip_args_to_tuple_ex(int ht, int argc, int start)
 	efree(zargs);
 
 	return args;
+}
+/* }}} */
+
+/* Object Representations */
+
+/* {{{ pip_str(PyObject *obj, char **buffer, int *length)
+   Returns the null-terminated string representation of a Python object */
+int pip_str(PyObject *obj, char **buffer, int *length)
+{
+	PyObject *str = PyObject_Str(obj);
+	int ret = -1;
+
+	if (str) {
+		ret = PyString_AsStringAndSize(str, buffer, length);
+		Py_DECREF(str);
+	}
+
+	return ret;
 }
 /* }}} */
 
