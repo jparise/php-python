@@ -16,11 +16,12 @@ This extension allows the Python interpreter to be embedded inside of PHP, allow
   </maintainers>
   <license>PHP</license>
   <release>
-    <version>0.1</version>
-    <date>2002-07-28</date>
+    <version>0.6.0</version>
+    <date>2002-11-05</date>
     <state>alpha</state>
     <notes>
-- Initial PECL release
+Updated alpha release that includes a number of improvements over the
+existing alpha preview.  PEAR (PECL) support is now working, too.
     </notes>
     <configureoptions>
       <configureoption name="with-python" default="autodetect" prompt="Python installation directory?"/>
@@ -41,4 +42,14 @@ This extension allows the Python interpreter to be embedded inside of PHP, allow
     <file role="test">tests/006.phpt</file>
     <file role="test">tests/007.phpt</file>
   </filelist>
+  <changelog>
+    <release>
+      <version>0.5.0</version>
+      <date>2002-07-28</date>
+      <state>alpha</state>
+      <notes>
+- Initial PECL release
+      </notes>
+    </release>
+  </changelog>
 </package>
