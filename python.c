@@ -407,10 +407,8 @@ convert_pyobject_to_zval(PyObject *obj)
 		ZVAL_DOUBLE(ret, PyFloat_AsDouble(obj));
 	} else if (PyString_Check(obj)) {
 		ZVAL_STRING(ret, PyString_AsString(obj), PyString_Size(obj));
-#if 0
-	} else if (PyObject_TypeCheck(obj, Py_None)) {
-		ZVAL_NULL(ret);	/* XXX: check */
-#endif
+	} else if (obj == Py_None) {
+		ZVAL_NULL(ret);
 	} else if (PyTuple_Check(obj) || PyList_Check(obj)) {
 		ret = convert_sequence_to_hash(obj);
 	} else if (PyDict_Check(obj)) {
@@ -483,47 +481,94 @@ static PyMethodDef php_methods[] = {
 
 /* Utility Functions */
 
-/* {{{ _prepend_syspath
+/* {{{ _syspath_prepend
  */
-static void
-_prepend_syspath(const char *dir)
+static int
+_syspath_prepend(const char *dir)
 {
-	if (dir) {
-		PyObject *sys;
-		PyObject *path;
-		PyObject *dirstr;
+	PyObject *sys, *path, *dirstr;
 
-		sys = PyImport_ImportModule("sys");
-		path = PyObject_GetAttrString(sys, "path");
-		dirstr = PyString_FromString(dir);
-
-		/* Prepend dir to sys.path if it's not already there. */
-		if (PySequence_Index(path, dirstr) == -1) {
-			PyObject *list;
-			PyErr_Clear();
-			list = Py_BuildValue("[O]", dirstr);
-			PyList_SetSlice(path, 0, 0, list);
-			Py_DECREF(list);
-		}
-
-		Py_DECREF(dirstr);
-		Py_DECREF(path);
-		Py_DECREF(sys);
+	if (dir == NULL) {
+		return -1;
 	}
+
+	sys = PyImport_ImportModule("sys");
+	path = PyObject_GetAttrString(sys, "path");
+	dirstr = PyString_FromString(dir);
+
+	/* Prepend dir to sys.path if it's not already there. */
+	if (PySequence_Index(path, dirstr) == -1) {
+		PyObject *list;
+		PyErr_Clear();
+		list = Py_BuildValue("[O]", dirstr);
+		PyList_SetSlice(path, 0, 0, list);
+		Py_DECREF(list);
+	}
+
+	Py_DECREF(dirstr);
+	Py_DECREF(path);
+	Py_DECREF(sys);
+
+	return 0;
 }
 /* }}} */
 
-/* {{{ _set_pythonpath
+/* {{{ _syspath_prepend_list
  */
 static void
-_set_pythonpath(const char *pythonpath)
+_syspath_prepend_list(const char *pathlist)
 {
 	char *delim = ":;";
 	char *path = NULL;
 
-	path = strtok((char *)pythonpath, delim);
+	path = strtok((char *)pathlist, delim);
 	while (path != NULL) {
-		_prepend_syspath(path);
+		_syspath_prepend(path);
+		path = strtok(NULL, delim);
+	}
+}
+/* }}} */
+
+/* {{{ _syspath_append
+ */
+static int
+_syspath_append(const char *dir)
+{
+	PyObject *sys, *path, *dirstr;
+
+	if (dir == NULL) {
+		return -1;
+	}
+
+	sys = PyImport_ImportModule("sys");
+	path = PyObject_GetAttrString(sys, "path");
+	dirstr = PyString_FromString(dir);
+
+	/* Append dir to sys.path if it's not already there. */
+	if (PySequence_Index(path, dirstr) == -1) {
+		PyErr_Clear();
+		PyList_Append(path, dirstr);
+	}
+
+	Py_DECREF(dirstr);
+	Py_DECREF(path);
+	Py_DECREF(sys);
+
+	return 0;
+}
+/* }}} */
+
+/* {{{ _syspath_append_list
+ */
+static void
+_syspath_append_list(const char *pathlist)
+{
+	char *delim = ":;";
+	char *path = NULL;
+
+	path = strtok((char *)pathlist, delim);
+	while (path != NULL) {
+		_syspath_append(path);
 		path = strtok(NULL, delim);
 	}
 }
@@ -558,7 +603,8 @@ python_error(int error_type)
 */
 ZEND_BEGIN_MODULE_GLOBALS(python)
 	PyObject *interpreters;
-	char *pythonpath;
+	char *prepend_path;
+	char *append_path;
 ZEND_END_MODULE_GLOBALS(python)
 
 ZEND_DECLARE_MODULE_GLOBALS(python)
@@ -569,6 +615,7 @@ ZEND_DECLARE_MODULE_GLOBALS(python)
 static void
 init_globals(zend_python_globals *python_globals TSRMLS_DC)
 {
+	/* Zero out the entire python_globals structure. */
 	memset(python_globals, 0, sizeof(zend_python_globals));
 }
 /* }}} */
@@ -825,7 +872,12 @@ python_set_property_handler(zend_property_reference *property_reference,
 /* {{{ python_functions[]
  */
 function_entry python_functions[] = {
+	PHP_FE(py_path,			NULL)
+	PHP_FE(py_path_prepend,	NULL)
+	PHP_FE(py_path_append,	NULL)
+	PHP_FE(py_import,		NULL)
 	PHP_FE(py_eval,			NULL)
+	PHP_FE(py_call,			NULL)
 	{NULL, NULL, NULL}
 };
 /* }}} */
@@ -850,17 +902,32 @@ ZEND_GET_MODULE(python)
 #endif
 /* }}} */
 
-/* {{{ OnUpdatePythonPath
+/* {{{ OnUpdatePrependPath
  */
-static PHP_INI_MH(OnUpdatePythonPath)
+static PHP_INI_MH(OnUpdatePrependPath)
 {
-	//printf("Updating python.pythonpath: %s\n", new_value);
+	/* Always set the global variable. */
+	PYG(prepend_path) = new_value;
 
-	PYG(pythonpath) = new_value;
-
-	/* This value can only be set if the interpreter has been initialized. */
+	/* sys.path can only be set after the interpreter has been initialized. */
 	if (Py_IsInitialized()) {
-		_set_pythonpath(new_value);
+		_syspath_prepend_list(new_value);
+	}
+
+	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ OnUpdateAppendPath
+ */
+static PHP_INI_MH(OnUpdateAppendPath)
+{
+	/* Always set the global variable. */
+	PYG(append_path) = new_value;
+
+	/* sys.path can only be set after the interpreter has been initialized. */
+	if (Py_IsInitialized()) {
+		_syspath_append_list(new_value);
 	}
 
 	return SUCCESS;
@@ -870,7 +937,8 @@ static PHP_INI_MH(OnUpdatePythonPath)
 /* {{{ PHP_INI
  */
 PHP_INI_BEGIN()
-	PHP_INI_ENTRY("python.path",		".",		PHP_INI_ALL,	OnUpdatePythonPath)
+	PHP_INI_ENTRY("python.prepend_path",	".",	PHP_INI_ALL,	OnUpdatePrependPath)
+	PHP_INI_ENTRY("python.append_path",		"",		PHP_INI_ALL,	OnUpdateAppendPath)
 PHP_INI_END()
 /* }}} */
 
@@ -918,8 +986,9 @@ PHP_MINIT_FUNCTION(python)
 	/* Initialize the PHP module for Python (see above) */
 	Py_InitModule3("php", php_methods, "PHP Module");
 
-	/* Add the current directory to Python's sys.path list */
-	_set_pythonpath(PYG(pythonpath));
+	/* Explicitly add the python.prepend_path and python.append_path values. */
+	_syspath_prepend_list(PYG(prepend_path));
+	_syspath_append_list(PYG(append_path));
 
 	return Py_IsInitialized() ? SUCCESS : FAILURE;
 }
@@ -952,8 +1021,109 @@ PHP_MINFO_FUNCTION(python)
 
 /* PHP Python Functions */
 
+/* {{{ proto void py_path()
+   Return the value of sys.path as an array. */
+PHP_FUNCTION(py_path)
+{
+	PyObject *sys = NULL, *path = NULL;
+
+	/* Attempt to import the "sys" module. */
+	sys = PyImport_ImportModule("sys");
+	if (sys == NULL) {
+		RETURN_FALSE;
+	}
+
+	/* Acquire a reference to the "path" list of the "sys" module. */
+	path = PyObject_GetAttrString(sys, "path");
+	Py_DECREF(sys);
+	if (path == NULL) {
+		RETURN_FALSE;
+	}
+
+	/* Convert the Python list to a PHP array */
+	*return_value = *convert_sequence_to_hash(path);
+	zval_copy_ctor(return_value);
+
+	Py_DECREF(path);
+}
+/* }}} */
+
+/* {{{ proto void py_path_prepend(string dir)
+   Prepend the given directory to the sys.path list. */ 
+PHP_FUNCTION(py_path_prepend)
+{
+	char *dir;
+	int dir_len;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s",
+							  &dir, &dir_len) == FAILURE) {
+		return;
+	}
+
+	if (_syspath_prepend(dir) == -1) {
+		RETURN_FALSE;
+	}
+
+	RETURN_TRUE;
+}
+/* }}} */
+
+/* {{{ proto void py_path_append(string dir)
+   Append the given directory to the sys.path list. */
+PHP_FUNCTION(py_path_append)
+{
+	char *dir;
+	int dir_len;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s",
+							  &dir, &dir_len) == FAILURE) {
+		return;
+	}
+
+	if (_syspath_append(dir) == -1) {
+		RETURN_FALSE;
+	}
+
+
+	RETURN_TRUE;
+}
+/* }}} */
+
+/* {{{ proto void py_import(string module)
+   Import the requested module. */
+PHP_FUNCTION(py_import)
+{
+	char *module_name, *command = NULL;
+	int module_name_len, command_len, result;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s",
+							  &module_name, &module_name_len) == FAILURE) {
+		return;
+	}
+
+	command_len = sizeof("import ") + module_name_len + 1;
+
+	command = (char *) emalloc(sizeof(char) * command_len);
+	if (command == NULL) {
+		php_error(E_ERROR, "Memory allocation failure");
+		RETURN_FALSE;
+	}
+
+	snprintf(command, command_len, "import %s", module_name);
+
+	result = PyRun_SimpleString(command);
+	efree(command);
+
+	if (result == -1) {
+		RETURN_FALSE;
+	}
+
+	RETURN_TRUE;
+}
+/* }}} */
+
 /* {{{ proto void py_eval(string code)
-   Evaluate the given string of code by passing it to the interpreter */
+   Evaluate the given string of code by passing it to the Python interpreter */
 PHP_FUNCTION(py_eval)
 {
 	char *code;
@@ -964,7 +1134,67 @@ PHP_FUNCTION(py_eval)
 		return;
 	}
 
-	PyRun_SimpleString(code); 
+	if (PyRun_SimpleString(code) == -1) {
+		RETURN_FALSE;
+	}
+
+	RETURN_TRUE;
+}
+/* }}} */
+
+/* {{{ proto void py_call(string module, string function[, array arguments])
+   Call the requested function in the requested module. */
+PHP_FUNCTION(py_call)
+{
+	char *module_name, *function_name;
+	int module_name_len, function_name_len;
+	zval *arguments = NULL;
+	PyObject *module = NULL;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|a",
+							  &module_name, &module_name_len,
+							  &function_name, &function_name_len,
+							  &arguments) == FAILURE) {
+		return;
+	}
+
+	module = PyImport_ImportModule(module_name);
+	if (module != NULL) {
+		PyObject *dict, *function;
+
+		dict = PyModule_GetDict(module);
+		
+		function = PyDict_GetItemString(dict, function_name);
+		if (function) {
+			PyObject *args = NULL, *result = NULL;
+
+			/* Build the argument list (as a tuple) */
+			if (arguments) {
+				args = convert_hash_to_tuple(&arguments);
+			}
+
+			/* Call the function with a tuple of arguments */
+			result = PyObject_CallObject(function, args);
+
+			Py_DECREF(function);
+			if (args) {
+				Py_DECREF(args);
+			}
+
+			if (result != NULL) {
+				/* Convert the Python result to its PHP equivalent */
+				*return_value = *convert_pyobject_to_zval(result);
+				zval_copy_ctor(return_value);
+				Py_DECREF(result);
+			} else {
+				python_error(E_ERROR);
+			}
+		} else {
+			python_error(E_ERROR);
+		}
+	} else {
+		python_error(E_ERROR);
+	}
 }
 /* }}} */
 
