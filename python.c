@@ -259,7 +259,7 @@ void
 python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 							 zend_property_reference *property_reference)
 {
-	pval *object = property_reference->object;
+	zval *object = property_reference->object;
 	zend_overloaded_element *function_name =
 		(zend_overloaded_element*)property_reference->elements_list->tail->data;
 
@@ -289,7 +289,7 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 			item = PyDict_GetItemString(dict, class_name);
 			if (item) {
 				PyObject *obj, *args = NULL;
-				pval *handle;
+				zval *handle;
 
 				/* Create a new Python object by calling the constructor */
 				args = pip_args_to_tuple(argc, 2);
@@ -299,13 +299,13 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 				}
 
 				if (obj) {
-					/* Wrap the Python object in a zval handle */
+					/* Store the Python object handle as a Zend resource */
 					ALLOC_ZVAL(handle);
-					ZVAL_LONG(handle, zend_list_insert(obj, le_pyobject));
-					pval_copy_constructor(handle);
+					ZVAL_RESOURCE(handle, zend_list_insert(obj, le_pyobject));
+					zval_copy_ctor(handle);
 					INIT_PZVAL(handle);
 					zend_hash_index_update(Z_OBJPROP_P(object), 0, &handle,
-										   sizeof(pval *), NULL);
+										   sizeof(zval *), NULL);
 				} else {
 					ZVAL_NULL(object);
 				}
@@ -317,12 +317,12 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 		}
 	} else {
 		PyObject *obj, *dir;
-		pval **handle;
-		int type;
+		zval **handle;
 
 		/* Fetch and reinstate the Python object from the hash */
 		zend_hash_index_find(Z_OBJPROP_P(object), 0, (void **) &handle);
-		obj = (PyObject *) zend_list_find(Z_LVAL_PP(handle), &type);
+		ZEND_FETCH_RESOURCE(obj, PyObject *, handle, -1, "PyObject",
+							le_pyobject);
 
 		/* Make sure the object exists and is callable */
 		if (obj && (dir = PyObject_Dir(obj))) {
@@ -409,45 +409,40 @@ python_attribute_handler(zend_property_reference *property_reference,
 {
 	zend_llist_element *element;
 	zend_overloaded_element *property;
-	pval **handle, return_value;
+	zval **handle, *object, return_value;
 	PyObject *obj;
-	int type;
+	char *propname;
 
-	/* Get the property name */
+	/* Get the attribute values */
+	object = property_reference->object;
 	element = property_reference->elements_list->head;
 	property = (zend_overloaded_element *) element->data;
+	propname = Z_STRVAL(property->element);
 
 	/* Default to a NULL result */
 	INIT_ZVAL(return_value);
 	ZVAL_NULL(&return_value);
 
 	/* Fetch and reinstate the Python object from the hash */
-	zend_hash_index_find(Z_OBJPROP_P(property_reference->object), 0,
-						 (void **) &handle);
-	obj = zend_list_find(Z_LVAL_PP(handle), &type);
+	zend_hash_index_find(Z_OBJPROP_P(object), 0, (void **) &handle);
+	obj = (PyObject *) zend_fetch_resource(handle TSRMLS_CC, -1, "PyObject",
+										   NULL, 1, le_pyobject);
 
-	/* Make sure we have a valid Python object */
-	if (type == le_pyobject) {
-		char *prop = Z_STRVAL(property->element);
-
-		/*
-		 * If a value was provided, perform a "set" operation.
-		 * Otherwise, perform a "get" operation.
-		 */
-		if (value) {
-			if (PyObject_SetAttrString(obj, prop, value) != -1) {
-				ZVAL_TRUE(&return_value);
-			}
-		} else {
-			PyObject *attr = NULL;
-
-			if (attr = PyObject_GetAttrString(obj, prop)) {
-				return_value = *pip_pyobject_to_zval(attr);
-				Py_DECREF(attr);
-			}
+	/*
+	 * If a value was provided, perform a "set" operation.
+	 * Otherwise, perform a "get" operation.
+	 */
+	if (value) {
+		if (PyObject_SetAttrString(obj, propname, value) != -1) {
+			ZVAL_TRUE(&return_value);
 		}
 	} else {
-		php_error(E_ERROR, "Not a Python object");
+		PyObject *attr = NULL;
+
+		if (attr = PyObject_GetAttrString(obj, propname)) {
+			return_value = *pip_pyobject_to_zval(attr);
+			Py_DECREF(attr);
+		}
 	}
 
 	pval_destructor(&property->element);
@@ -576,10 +571,10 @@ static void python_destructor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
  */
 PHP_MINIT_FUNCTION(python)
 {
-	/* Initialize and register the overloaded "python" object class type */
+	/* Initialize and register the overloaded "Python" object class type */
 	INIT_OVERLOADED_CLASS_ENTRY(
 		python_class_entry,					/* Class container */
-		"python",							/* Class name */
+		"Python",							/* Class name */
 		NULL,								/* Functions */
 		python_call_function_handler,		/* Function call handler */
 		python_get_property_handler,		/* Get property handler */
@@ -589,7 +584,7 @@ PHP_MINIT_FUNCTION(python)
 
 	/* Register the Python object destructor */
 	le_pyobject = zend_register_list_destructors_ex(python_destructor, NULL,
-													"python", module_number);
+													"Python", module_number);
 
 	/* Initialize global variables and INI file entries */
 	ZEND_INIT_MODULE_GLOBALS(python, init_globals, NULL);
