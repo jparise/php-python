@@ -407,8 +407,10 @@ convert_pyobject_to_zval(PyObject *obj)
 		ZVAL_DOUBLE(ret, PyFloat_AsDouble(obj));
 	} else if (PyString_Check(obj)) {
 		ZVAL_STRING(ret, PyString_AsString(obj), PyString_Size(obj));
-	} else if (PyObject_TypeCheck(obj, Py_NONE)) {
+#if 0
+	} else if (PyObject_TypeCheck(obj, Py_None)) {
 		ZVAL_NULL(ret);	/* XXX: check */
+#endif
 	} else if (PyTuple_Check(obj) || PyList_Check(obj)) {
 		ret = convert_sequence_to_hash(obj);
 	} else if (PyDict_Check(obj)) {
