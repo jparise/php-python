@@ -374,7 +374,7 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 				PyObject *args, *result = NULL;
 
 				/* Invoke the requested method on the object */
-				args = pip_args_to_tuple_ex(ht, ZEND_NUM_ARGS() TSRMLS_CC, 0);
+				args = pip_args_to_tuple_ex(ht, ZEND_NUM_ARGS(), 0 TSRMLS_CC);
 				result = PyObject_CallObject(method, args);
 				Py_DECREF(method);
 				if (args) {
