@@ -95,6 +95,10 @@ LINK32=link.exe
 
 SOURCE=.\python.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\pip_convert.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -102,6 +106,10 @@ SOURCE=.\python.c
 # Begin Source File
 
 SOURCE=.\php_python.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pip_convert.h
 # End Source File
 # End Group
 # End Target
