@@ -21,7 +21,7 @@ This extension allows the Python interpreter to be embedded inside of PHP, allow
     <state>alpha</state>
     <notes>
 - Python functions now accept a variable list of arguments.  The array() method of passing arguments no longer works.
-- Python object handles are now stored internal as Zend resources.
+- Python object handles are now stored internally as Zend resources.
     </notes>
     <configureoptions>
       <configureoption name="with-python" default="autodetect" prompt="Python installation directory?"/>
