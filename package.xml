@@ -5,7 +5,7 @@
   <description>
 This extension allows the Python interpreter to be embedded inside of PHP, allowing for the instantiate and manipulation of Python objects from within PHP.
   </description>
-  <status>alpha</status>
+  <status>beta</status>
   <maintainers>
     <maintainer>
       <user>jon</user>
@@ -16,11 +16,12 @@ This extension allows the Python interpreter to be embedded inside of PHP, allow
   </maintainers>
   <license>PHP</license>
   <release>
-    <version>0.6.0</version>
-    <date>2002-11-05</date>
+    <version>0.7.0</version>
+    <date>2003-01-12</date>
     <state>alpha</state>
     <notes>
-Updated alpha release that includes a number of improvements over the existing alpha preview.  PEAR (PECL) support is now working, too.
+- Python functions now accept a variable list of arguments.  The array() method of passing arguments no longer works.
+- Python object handles are now stored internal as Zend resources.
     </notes>
     <configureoptions>
       <configureoption name="with-python" default="autodetect" prompt="Python installation directory?"/>
@@ -44,6 +45,14 @@ Updated alpha release that includes a number of improvements over the existing a
     <file role="test">tests/007.phpt</file>
   </filelist>
   <changelog>
+    <release>
+      <version>0.6.0</version>
+      <date>2002-11-05</date>
+      <state>alpha</state>
+      <notes>
+Updated alpha release that includes a number of improvements over the existing alpha preview.  PEAR (PECL) support is now working, too.
+      </notes>
+    </release>
     <release>
       <version>0.5.0</version>
       <date>2002-07-28</date>
