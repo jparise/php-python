@@ -1,0 +1,22 @@
+// $Id$
+// vim:ft=javascript
+
+ARG_WITH("python", "Embedded Python support", "no");
+
+if (PHP_PYTHON != "no") {
+	if (PHP_PYTHON == "yes") {
+		PHP_PYTHON = WshShell.Environment("Process").Item("PYTHONHOME");
+	}
+
+	if (CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON",
+								 PHP_PYTHON + "\\include") &&
+		(CHECK_LIB("python22.lib", "python", PHP_PYTHON + "\\libs") ||
+		 CHECK_LIB("python23.lib", "python", PHP_PYTHON + "\\libs"))) {
+		EXTENSION("python", "python.c pip_convert.c",
+				  null, "/D PYTHON_EXPORTS");
+		AC_DEFINE("HAVE_PYTHON", 1);
+	} else {
+		WARNING("python not enabled; libraries and headers not found");
+	}
+}
+
