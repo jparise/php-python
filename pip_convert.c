@@ -25,6 +25,8 @@
 extern int le_pyobject;
 extern zend_class_entry python_class_entry;
 
+/* PHP to Python Conversions */
+
 /* {{{ pip_hash_to_list(zval **hash)
    Convert a PHP hash to a Python list */
 PyObject *
@@ -121,6 +123,102 @@ pip_hash_to_dict(zval **hash)
 }
 /* }}} */
 
+/* {{{ pip_zobject_to_pyobject(zval **obj)
+   Convert a PHP (Zend) object to a Python object */
+PyObject *
+pip_zobject_to_pyobject(zval **obj)
+{
+	PyObject *dict, *item, *str;
+	zval **entry;
+	char *string_key;
+	long num_key;
+
+	/*
+	 * At this point, we represent a PHP object as a dictionary of
+	 * its properties.  In the future, we may provide a true object
+	 * conversion (which is entirely possible, but it's more work
+	 * that I plan on doing right now).
+	 */
+	dict = PyDict_New();
+
+	/* Start at the beginning of the object properties hash */
+	zend_hash_internal_pointer_reset(Z_OBJPROP_PP(obj));
+
+	/* Iterate over the hash's elements */
+	while (zend_hash_get_current_data(Z_OBJPROP_PP(obj),
+									  (void **)&entry) == SUCCESS) {
+
+		/* Convert the PHP value to its Python equivalent (recursion) */
+		item = pip_zval_to_pyobject(entry);
+
+		switch (zend_hash_get_current_key(Z_OBJPROP_PP(obj),
+										  &string_key, &num_key, 0)) {
+			case HASH_KEY_IS_STRING:
+				PyDict_SetItemString(dict, string_key, item);
+				break;
+			case HASH_KEY_IS_LONG:
+				str = PyString_FromFormat("%d", num_key);
+				PyObject_SetItem(dict, str, item);
+				Py_DECREF(str);
+				break;
+			case HASH_KEY_NON_EXISTANT:
+				php_error(E_ERROR, "No array key");
+				break;
+		}
+
+		/* Advance to the next entry */
+		zend_hash_move_forward(Z_OBJPROP_PP(obj));
+	}
+
+	return dict;
+}
+/* }}} */
+
+/* {{{ pip_zval_to_pyobject(zval **val)
+   Converts the given zval into an equivalent PyObject */
+PyObject *
+pip_zval_to_pyobject(zval **val)
+{
+	PyObject *ret;
+
+	if (val == NULL) {
+		return NULL;
+	}
+
+	switch (Z_TYPE_PP(val)) {
+	case IS_BOOL:
+		ret = Py_BuildValue("i", Z_LVAL_PP(val) ? 1 : 0);
+		break;
+	case IS_LONG:
+		ret = Py_BuildValue("l", Z_LVAL_PP(val));
+		break;
+	case IS_DOUBLE:
+		ret = Py_BuildValue("d", Z_DVAL_PP(val));
+		break;
+	case IS_STRING:
+		ret = Py_BuildValue("s", Z_STRVAL_PP(val));
+		break;
+	case IS_ARRAY:
+		ret = pip_hash_to_dict(val);
+		break;
+	case IS_OBJECT:
+		ret = pip_zobject_to_pyobject(val);
+		break;
+	case IS_NULL:
+		Py_INCREF(Py_None);
+		ret = Py_None;
+		break;
+	default:
+		ret = NULL;
+		break;
+	}
+
+	return ret;
+}
+/* }}} */
+
+/* Python to PHP Conversions */
+
 /* {{{ pip_sequence_to_hash(PyObject *seq)
  * Convert a Python sequence to a PHP hash */
 zval *
@@ -215,57 +313,6 @@ pip_mapping_to_hash(PyObject *map)
 }
 /* }}} */
 
-/* {{{ pip_zobject_to_pyobject(zval **obj)
-   Convert a PHP (Zend) object to a Python object */
-PyObject *
-pip_zobject_to_pyobject(zval **obj)
-{
-	PyObject *dict, *item, *str;
-	zval **entry;
-	char *string_key;
-	long num_key;
-
-	/*
-	 * At this point, we represent a PHP object as a dictionary of
-	 * its properties.  In the future, we may provide a true object
-	 * conversion (which is entirely possible, but it's more work
-	 * that I plan on doing right now).
-	 */
-	dict = PyDict_New();
-
-	/* Start at the beginning of the object properties hash */
-	zend_hash_internal_pointer_reset(Z_OBJPROP_PP(obj));
-
-	/* Iterate over the hash's elements */
-	while (zend_hash_get_current_data(Z_OBJPROP_PP(obj),
-									  (void **)&entry) == SUCCESS) {
-
-		/* Convert the PHP value to its Python equivalent (recursion) */
-		item = pip_zval_to_pyobject(entry);
-
-		switch (zend_hash_get_current_key(Z_OBJPROP_PP(obj),
-										  &string_key, &num_key, 0)) {
-			case HASH_KEY_IS_STRING:
-				PyDict_SetItemString(dict, string_key, item);
-				break;
-			case HASH_KEY_IS_LONG:
-				str = PyString_FromFormat("%d", num_key);
-				PyObject_SetItem(dict, str, item);
-				Py_DECREF(str);
-				break;
-			case HASH_KEY_NON_EXISTANT:
-				php_error(E_ERROR, "No array key");
-				break;
-		}
-
-		/* Advance to the next entry */
-		zend_hash_move_forward(Z_OBJPROP_PP(obj));
-	}
-
-	return dict;
-}
-/* }}} */
-
 /* {{{ pip_pyobject_to_zobject(PyObject *obj)
    Convert Python object to a PHP (Zend) object */
 zval *
@@ -288,49 +335,6 @@ pip_pyobject_to_zobject(PyObject *obj)
 	pval_copy_constructor(handle);
 	INIT_PZVAL(handle);
 	zend_hash_index_update(Z_OBJPROP_P(ret), 0, &handle, sizeof(pval *), NULL);
-
-	return ret;
-}
-/* }}} */
-
-/* {{{ pip_zval_to_pyobject(zval **val)
-   Converts the given zval into an equivalent PyObject */
-PyObject *
-pip_zval_to_pyobject(zval **val)
-{
-	PyObject *ret;
-
-	if (val == NULL) {
-		return NULL;
-	}
-
-	switch (Z_TYPE_PP(val)) {
-	case IS_BOOL:
-		ret = Py_BuildValue("i", Z_LVAL_PP(val) ? 1 : 0);
-		break;
-	case IS_LONG:
-		ret = Py_BuildValue("l", Z_LVAL_PP(val));
-		break;
-	case IS_DOUBLE:
-		ret = Py_BuildValue("d", Z_DVAL_PP(val));
-		break;
-	case IS_STRING:
-		ret = Py_BuildValue("s", Z_STRVAL_PP(val));
-		break;
-	case IS_ARRAY:
-		ret = pip_hash_to_dict(val);
-		break;
-	case IS_OBJECT:
-		ret = pip_zobject_to_pyobject(val);
-		break;
-	case IS_NULL:
-		Py_INCREF(Py_None);
-		ret = Py_None;
-		break;
-	default:
-		ret = NULL;
-		break;
-	}
 
 	return ret;
 }
@@ -371,6 +375,8 @@ pip_pyobject_to_zval(PyObject *obj)
 	return ret;
 }
 /* }}} */
+
+/* Argument Conversions */
 
 /* {{{ pip_args_to_tuple(int argc, int start)
    Converts PHP arguments into a Python tuple suitable for argument passing */
