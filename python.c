@@ -34,7 +34,7 @@
  *	- check for attribute existence in python_attribute_handler()
  *	- var_dump($python_object) should list attributes (and methods)
  *	- py_import() should accept arrays and support 'from foo import bar'
- *	- Implement: Py_SetProgramName() and PySys_SetArgv().
+ *	- Store an object's dir() dictionary alongside its object handle.
  */
 
 #ifdef HAVE_CONFIG_H
