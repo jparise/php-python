@@ -385,7 +385,7 @@ convert_zval_to_pyobject(zval **val)
 }
 /* }}} */
 
-/* {{{ convert_pyobject_to_zval(zval **val)
+/* {{{ convert_pyobject_to_zval(PyObject *obj)
    Converts the given PyObject into an equivalent zval */
 static zval *
 convert_pyobject_to_zval(PyObject *obj)
@@ -406,7 +406,7 @@ convert_pyobject_to_zval(PyObject *obj)
 	} else if (PyFloat_Check(obj)) {
 		ZVAL_DOUBLE(ret, PyFloat_AsDouble(obj));
 	} else if (PyString_Check(obj)) {
-		ZVAL_STRING(ret, PyString_AsString(obj), PyString_Size(obj));
+		ZVAL_STRINGL(ret, PyString_AsString(obj), PyString_Size(obj), 1);
 	} else if (obj == Py_None) {
 		ZVAL_NULL(ret);
 	} else if (PyTuple_Check(obj) || PyList_Check(obj)) {
@@ -414,7 +414,7 @@ convert_pyobject_to_zval(PyObject *obj)
 	} else if (PyDict_Check(obj)) {
 		ret = convert_mapping_to_hash(obj);
 	} else {
-		ret = convert_pyobject_to_zobject(obj); /* XXX: recursion */
+		ret = convert_pyobject_to_zobject(obj);
 	}
 
 	return ret;
@@ -790,7 +790,7 @@ python_attribute_handler(zend_property_reference *property_reference,
 {
 	zend_llist_element *element;
 	zend_overloaded_element *property;
-	pval **handle, result;
+	pval **handle, return_value;
 	PyObject *obj;
 	int type;
 
@@ -799,7 +799,8 @@ python_attribute_handler(zend_property_reference *property_reference,
 	property = (zend_overloaded_element *) element->data;
 
 	/* Default to a NULL result */
-	Z_TYPE(result) = IS_NULL;
+	INIT_ZVAL(return_value);
+	ZVAL_NULL(&return_value);
 
 	/* Fetch and reinstate the Python object from the hash */
 	zend_hash_index_find(Z_OBJPROP_P(property_reference->object), 0,
@@ -816,13 +817,13 @@ python_attribute_handler(zend_property_reference *property_reference,
 		 */
 		if (value) {
 			if (PyObject_SetAttrString(obj, prop, value) != -1) {
-				ZVAL_TRUE(&result);
+				ZVAL_TRUE(&return_value);
 			}
 		} else {
 			PyObject *attr = NULL;
 
 			if (attr = PyObject_GetAttrString(obj, prop)) {
-				result = *(convert_pyobject_to_zval(attr));
+				return_value = *convert_pyobject_to_zval(attr);
 				Py_DECREF(attr);
 			}
 		}
@@ -832,7 +833,7 @@ python_attribute_handler(zend_property_reference *property_reference,
 
 	pval_destructor(&property->element);
 
-	return result;
+	return return_value;
 }
 /* }}} */
 
