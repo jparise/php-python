@@ -37,4 +37,8 @@ zval * pip_mapping_to_hash(PyObject *map);
 zval * pip_pyobject_to_zobject(PyObject *obj);
 zval * pip_pyobject_to_zval(PyObject *obj);
 
+/* Arguments */
+PyObject * pip_args_to_tuple(int argc, int start);
+PyObject * pip_args_to_tuple_ex(int ht, int argc, int start);
+
 #endif /* PIP_CONVERT_H */
