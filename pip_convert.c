@@ -132,6 +132,7 @@ pip_zobject_to_pyobject(zval **obj)
 	zval **entry;
 	char *string_key;
 	long num_key;
+	TSRMLS_FETCH();
 
 	/*
 	 * At this point, we represent a PHP object as a dictionary of
@@ -227,6 +228,7 @@ pip_sequence_to_hash(PyObject *seq)
 	zval *hash, *val;
 	PyObject *item;
 	int i = 0;
+	TSRMLS_FETCH();
 
 	/* Make sure this object implements the sequence protocol */
 	if (!PySequence_Check(seq)) {
@@ -263,6 +265,7 @@ pip_mapping_to_hash(PyObject *map)
 	PyObject *keys, *key, *item;
 	char *key_name;
 	int i, key_len;
+	TSRMLS_FETCH();
 
 	if (!PyMapping_Check(map)) {
 		return NULL;
