@@ -275,7 +275,7 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 		int argc = ZEND_NUM_ARGS();
 
 		/* Parse only the first two arguments (module name and class name). */
-		if (zend_parse_parameters(2, "ss", &module_name, &module_name_len,
+		if (zend_parse_parameters(2 TSRMLS_CC, "ss", &module_name, &module_name_len,
 								  &class_name, &class_name_len) == FAILURE) {
 			return;
 		}
@@ -777,7 +777,7 @@ PHP_FUNCTION(py_call)
 	int argc = ZEND_NUM_ARGS();
 
 	/* Parse only the first two parameters (module name and function name). */
-	if (zend_parse_parameters(2, "ss", &module_name, &module_name_len,
+	if (zend_parse_parameters(2 TSRMLS_CC, "ss", &module_name, &module_name_len,
 							  &function_name, &function_name_len) == FAILURE) {
 		return;
 	}
