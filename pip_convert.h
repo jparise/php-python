@@ -41,4 +41,8 @@ zval * pip_pyobject_to_zval(PyObject *obj);
 PyObject * pip_args_to_tuple(int argc, int start);
 PyObject * pip_args_to_tuple_ex(int ht, int argc, int start);
 
+/* Object Representations */
+
+int pip_str(PyObject *obj, char **buffer, int *length);
+
 #endif /* PIP_CONVERT_H */
