@@ -840,16 +840,16 @@ zend_module_entry python_module_entry = {
 	STANDARD_MODULE_PROPERTIES
 };
 
+#ifdef COMPILE_DL_W32API
+ZEND_GET_MODULE(python)
+#endif
+/* }}} */
+
 /* {{{ PHP_INI
  */
 PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("python.paths",		".",		PHP_INI_ALL,	OnUpdateString,		paths,          zend_python_globals,   python_globals)
 PHP_INI_END()
-/* }}} */
-
-#ifdef COMPILE_DL_W32API
-ZEND_GET_MODULE(python)
-#endif
 /* }}} */
 
 /* {{{ python_destructor
