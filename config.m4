@@ -1,8 +1,8 @@
 dnl $Id$
 dnl config.m4 for extension python
 
-PHP_ARG_WITH(python, for Python support,
-[  --with-python[=DIR]     Include Python support])
+PHP_ARG_WITH(python, for embedded Python support,
+[  --with-python[=DIR]     Include embedded Python support])
 
 if test "$PHP_PYTHON" != "no"; then
   SEARCH_PATH="/usr/local /usr"
