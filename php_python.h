@@ -38,7 +38,12 @@ PHP_MINFO_FUNCTION(python);
 PHP_MINIT_FUNCTION(python);
 PHP_MSHUTDOWN_FUNCTION(python);
 
+PHP_FUNCTION(py_path);
+PHP_FUNCTION(py_path_prepend);
+PHP_FUNCTION(py_path_append);
+PHP_FUNCTION(py_import);
 PHP_FUNCTION(py_eval);
+PHP_FUNCTION(py_call);
 
 #ifdef ZTS
 #define PYG(v) TSRMG(python_globals_id, zend_python_globals *, v)
