@@ -20,8 +20,7 @@ This extension allows the Python interpreter to be embedded inside of PHP, allow
     <date>2002-11-05</date>
     <state>alpha</state>
     <notes>
-Updated alpha release that includes a number of improvements over the
-existing alpha preview.  PEAR (PECL) support is now working, too.
+Updated alpha release that includes a number of improvements over the existing alpha preview.  PEAR (PECL) support is now working, too.
     </notes>
     <configureoptions>
       <configureoption name="with-python" default="autodetect" prompt="Python installation directory?"/>
