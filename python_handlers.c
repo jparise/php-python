@@ -26,7 +26,7 @@
 
 #include "php.h"
 #include "php_python_internal.h"
-#include "Zend/zend_default_classes.h"
+#include "Zend/zend_exceptions.h"
 
 /* {{{ efree_function(zend_internal_function *func)
    Frees the memory allocated to a zend_internal_function structure. */
