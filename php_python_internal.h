@@ -18,26 +18,51 @@
 
  /* $Id$ */
 
-#ifndef PIP_CONVERT_H
-#define PIP_CONVERT_H
+#ifndef PHP_PYTHON_INTERNAL_H
+#define PHP_PYTHON_INTERNAL_H
 
-#include <Python.h>
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4005)
+#endif
+
+#include "Python.h"
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+
 #include "zend.h"
 
-/* PHP to Python */
+typedef struct _php_python_object {
+	PyObject *			object;
+    zend_class_entry *	ce;
+} php_python_object;
+
+#define PIP_FETCH(zv)	(php_python_object *)zend_object_store_get_object(zv TSRMLS_CC)
+
+zend_object_value python_object_create(zend_class_entry *ce TSRMLS_DC);
+void python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC);
+void python_object_clone(void *object, void **clone_ptr TSRMLS_DC);
+
+zend_object_handlers python_object_handlers;
+
+PHP_FUNCTION(python_new);
+
+/* PHP to Python Conversion */
 PyObject * pip_hash_to_list(zval **hash);
 PyObject * pip_hash_to_tuple(zval **hash);
 PyObject * pip_hash_to_dict(zval **hash);
 PyObject * pip_zobject_to_pyobject(zval **obj);
 PyObject * pip_zval_to_pyobject(zval **val);
 
-/* Python to PHP */
+/* Python to PHP Conversion */
 zval * pip_sequence_to_hash(PyObject *seq);
 zval * pip_mapping_to_hash(PyObject *map);
 zval * pip_pyobject_to_zobject(PyObject *obj);
 zval * pip_pyobject_to_zval(PyObject *obj);
 
-/* Arguments */
+/* Argument Conversion */
 PyObject * pip_args_to_tuple(int argc, int start TSRMLS_DC);
 PyObject * pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC);
 
@@ -45,4 +70,4 @@ PyObject * pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC);
 
 int pip_str(PyObject *obj, char **buffer, int *length);
 
-#endif /* PIP_CONVERT_H */
+#endif /* PHP_PYTHON_INTERNAL_H */

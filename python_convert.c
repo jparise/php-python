@@ -18,12 +18,8 @@
 
 /* $Id$ */
 
-#include "pip_convert.h"
-
 #include "php.h"
-
-extern int le_pyobject;
-extern zend_class_entry python_class_entry;
+#include "php_python_internal.h"
 
 /* PHP to Python Conversions */
 
@@ -321,7 +317,8 @@ pip_mapping_to_hash(PyObject *map)
 zval *
 pip_pyobject_to_zobject(PyObject *obj)
 {
-	pval *ret;
+	pval *ret = NULL;
+#if 0
 	zval *handle;
 	TSRMLS_FETCH();
 
@@ -337,6 +334,7 @@ pip_pyobject_to_zobject(PyObject *obj)
 	zval_copy_ctor(handle);
 	INIT_PZVAL(handle);
 	zend_hash_index_update(Z_OBJPROP_P(ret), 0, &handle, sizeof(zval *), NULL);
+#endif
 
 	return ret;
 }
