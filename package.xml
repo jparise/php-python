@@ -29,11 +29,13 @@ Updated alpha release that includes a number of improvements over the existing a
   <filelist>
     <file role="doc">CREDITS</file>
     <file role="doc">EXPERIMENTAL</file>
-    <file role="src">config.m4</file>
     <file role="src">Makefile.in</file>
+    <file role="src">config.m4</file>
+    <file role="src">pip_convert.c</file>
+    <file role="src">pip_convert.h</file>
+    <file role="src">php_python.h</file>
     <file role="src">python.c</file>
     <file role="src">python.dsp</file>
-    <file role="src">php_python.h</file>
     <file role="test">tests/001.phpt</file>
     <file role="test">tests/002.phpt</file>
     <file role="test">tests/003.phpt</file>
