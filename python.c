@@ -124,7 +124,7 @@ convert_hash_to_tuple(zval **hash)
 static PyObject *
 convert_hash_to_dict(zval **hash)
 {
-	PyObject *dict, *item, *str;
+	PyObject *dict, *item, *integer;
 	zval **entry;
 	char *string_key;
 	long num_key = 0;
@@ -147,15 +147,16 @@ convert_hash_to_dict(zval **hash)
 		/* Convert the PHP value to its Python equivalent (recursion) */
 		item = convert_zval_to_pyobject(entry);
 
+		/* Assign the item with the appropriate key type (string or integer) */
 		switch (zend_hash_get_current_key(Z_ARRVAL_PP(hash), &string_key,
 										  &num_key, 0)) {
 			case HASH_KEY_IS_STRING:
 				PyDict_SetItemString(dict, string_key, item);
 				break;
 			case HASH_KEY_IS_LONG:
-				str = PyString_FromFormat("%d", num_key);
-				PyDict_SetItem(dict, str, item);
-				Py_DECREF(str);
+				integer = PyInt_FromLong(num_key);
+				PyDict_SetItem(dict, integer, item);
+				Py_DECREF(integer);
 				break;
 		}
 
