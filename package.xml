@@ -32,6 +32,6 @@ This extension allows the Python interpreter to be embedded inside of PHP, allow
     <file role="ext">python.c</file>
     <file role="ext">python.dsp</file>
     <file role="ext">php_python.h</file>
+    <file role="test">tests/001.phpt</file>
   </filelist>
 </package>
-
