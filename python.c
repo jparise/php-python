@@ -32,6 +32,9 @@
  *	- display the traceback upon an exception (optionally?)
  *	- redirect Python stderr back to PHP
  *	- check for attribute existence in python_attribute_handler()
+ *	- var_dump($python_object) should list attributes (and methods)
+ *	- py_import() should accept arrays and support 'from foo import bar'
+ *	- Implement: Py_SetProgramName() and PySys_SetArgv().
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1015,7 +1018,17 @@ PHP_MINFO_FUNCTION(python)
 {
 	php_info_print_table_start();
 	php_info_print_table_row(2, "Python Support", "enabled");
-	php_info_print_table_row(2, "Python Version", PY_VERSION);
+	php_info_print_table_row(2, "Python Version", Py_GetVersion());
+	php_info_print_table_row(2, "Extension Version", "$Revision$");
+	php_info_print_table_end();
+
+	DISPLAY_INI_ENTRIES();
+
+	php_info_print_table_start();
+	php_info_print_table_header(1, "Python Copyright");
+	php_info_print_box_start(0);
+	php_printf("%s", Py_GetCopyright());
+	php_info_print_box_end();
 	php_info_print_table_end();
 }
 /* }}} */
