@@ -25,12 +25,13 @@
  *	- investigate standard common functions for all import Python objects
  *	- allow modules to be manipulated as objects from PHP
  *	- allow passing associative arrays for keyword arguments
- *	- allow setting PYTHONPATH from php.ini
  *	- preload modules from php.ini
  *	- true conversion of PHP objects
  *	- investigate ability to extend Python objects using PHP objects
  *	- safe_mode checks where applicable
  *	- display the traceback upon an exception (optionally?)
+ *	- redirect Python stderr back to PHP
+ *	- check for attribute existence in python_attribute_handler()
  */
 
 #ifdef HAVE_CONFIG_H
@@ -406,12 +407,14 @@ convert_pyobject_to_zval(PyObject *obj)
 		ZVAL_DOUBLE(ret, PyFloat_AsDouble(obj));
 	} else if (PyString_Check(obj)) {
 		ZVAL_STRING(ret, PyString_AsString(obj), PyString_Size(obj));
+	} else if (PyObject_TypeCheck(obj, Py_NONE)) {
+		ZVAL_NULL(ret);	/* XXX: check */
 	} else if (PyTuple_Check(obj) || PyList_Check(obj)) {
 		ret = convert_sequence_to_hash(obj);
 	} else if (PyDict_Check(obj)) {
 		ret = convert_mapping_to_hash(obj);
 	} else {
-		ret = convert_pyobject_to_zobject(obj);
+		ret = convert_pyobject_to_zobject(obj); /* XXX: recursion */
 	}
 
 	return ret;
@@ -508,15 +511,15 @@ _prepend_syspath(const char *dir)
 }
 /* }}} */
 
-/* {{{ python_addpaths
+/* {{{ _set_pythonpath
  */
 static void
-python_addpaths(const char *paths)
+_set_pythonpath(const char *pythonpath)
 {
 	char *delim = ":;";
 	char *path = NULL;
 
-	path = strtok((char *)paths, delim);
+	path = strtok((char *)pythonpath, delim);
 	while (path != NULL) {
 		_prepend_syspath(path);
 		path = strtok(NULL, delim);
@@ -553,7 +556,7 @@ python_error(int error_type)
 */
 ZEND_BEGIN_MODULE_GLOBALS(python)
 	PyObject *interpreters;
-	char *paths;
+	char *pythonpath;
 ZEND_END_MODULE_GLOBALS(python)
 
 ZEND_DECLARE_MODULE_GLOBALS(python)
@@ -845,10 +848,27 @@ ZEND_GET_MODULE(python)
 #endif
 /* }}} */
 
+/* {{{ OnUpdatePythonPath
+ */
+static PHP_INI_MH(OnUpdatePythonPath)
+{
+	//printf("Updating python.pythonpath: %s\n", new_value);
+
+	PYG(pythonpath) = new_value;
+
+	/* This value can only be set if the interpreter has been initialized. */
+	if (Py_IsInitialized()) {
+		_set_pythonpath(new_value);
+	}
+
+	return SUCCESS;
+}
+/* }}} */
+
 /* {{{ PHP_INI
  */
 PHP_INI_BEGIN()
-	STD_PHP_INI_ENTRY("python.paths",		".",		PHP_INI_ALL,	OnUpdateString,		paths,          zend_python_globals,   python_globals)
+	PHP_INI_ENTRY("python.path",		".",		PHP_INI_ALL,	OnUpdatePythonPath)
 PHP_INI_END()
 /* }}} */
 
@@ -897,7 +917,7 @@ PHP_MINIT_FUNCTION(python)
 	Py_InitModule3("php", php_methods, "PHP Module");
 
 	/* Add the current directory to Python's sys.path list */
-	python_addpaths(PYG(paths));
+	_set_pythonpath(PYG(pythonpath));
 
 	return Py_IsInitialized() ? SUCCESS : FAILURE;
 }
