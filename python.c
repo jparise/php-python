@@ -30,6 +30,7 @@
  *	- true conversion of PHP objects
  *	- investigate ability to extend Python objects using PHP objects
  *	- safe_mode checks where applicable
+ *	- display the traceback upon an exception (optionally?)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -194,7 +195,7 @@ convert_sequence_to_hash(PyObject *seq)
 
 		if (zend_hash_next_index_insert(HASH_OF(hash), (void *)&val,
 									   sizeof(zval *), NULL) == FAILURE) {
-			php_error(E_ERROR, "Array conversion error");
+			php_error(E_ERROR, "Python: Array conversion error");
 		}
 		Py_DECREF(item);
 	}
@@ -244,14 +245,14 @@ convert_mapping_to_hash(PyObject *map)
 					if (zend_hash_update(HASH_OF(hash), key_name, key_len,
 										 (void *)&val, sizeof(zval *),
 										 NULL) == FAILURE) {
-						php_error(E_ERROR, "Array conversion error");
+						php_error(E_ERROR, "Python: Array conversion error");
 					}
 					Py_DECREF(item);
 				} else {
-					php_error(E_ERROR, "Could not retrieve item for key");
+					php_error(E_ERROR, "Python: Could not get item for key");
 				}
 			} else {
-				php_error(E_ERROR, "Mapping key conversion error");
+				php_error(E_ERROR, "Python: Mapping key conversion error");
 			}
 			Py_DECREF(key);
 		}
@@ -493,6 +494,29 @@ init_globals(zend_python_globals *python_globals TSRMLS_DC)
 }
 /* }}} */
 
+/* {{{ python_error
+ */
+static void
+python_error(int error_type)
+{
+	PyObject *ptype, *pvalue, *ptraceback;
+	PyObject *type, *value;
+
+	/* Fetch the last error and store the type and value as strings. */
+	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+	type = PyObject_Str(ptype);
+	value = PyObject_Str(pvalue);
+
+	Py_XDECREF(ptype);
+	Py_XDECREF(pvalue);
+	Py_XDECREF(ptraceback);
+
+	/* Output the error to the user using php_error. */
+	php_error(error_type, "Python: [%s] '%s'", PyString_AsString(type),
+			  PyString_AsString(value));
+}
+/* }}} */
+
 /* {{{ python_call_function_handler
    Function call handler */
 void
@@ -555,10 +579,10 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 					ZVAL_NULL(object);
 				}
 			} else {
-				php_error(E_ERROR, "Could not find requested object in module");
+				python_error(E_ERROR);
 			}
 		} else {
-			php_error(E_ERROR, "Could not import module");
+			python_error(E_ERROR);
 		}
 	} else {
 		PyObject *obj, *dir;
@@ -641,13 +665,13 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 					zval_copy_ctor(return_value);
 					Py_DECREF(result);
 				} else {
-					php_error(E_ERROR, "Could not call method");
+					python_error(E_ERROR);
 				}
 			} else {
-				php_error(E_ERROR, "Method does not exist or is not callable");
+				python_error(E_ERROR);
 			}
 		} else {
-			php_error(E_ERROR, "Object does not exist or is not callable");
+			python_error(E_ERROR);
 		}
 	}
 
