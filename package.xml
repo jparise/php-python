@@ -21,7 +21,7 @@ This extension allows the Python interpreter to be embedded inside of PHP, allow
 - Initial PECL release
     </notes>
     <configureoptions>
-      <configureoption name="with-python" default="autodetect" prompt="Python installation directory? "/>
+      <configureoption name="with-python" default="autodetect" prompt="Python installation directory?"/>
     </configureoptions>
   </release>
   <filelist>
