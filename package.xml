@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<package>
+  <name>python</name>
+  <summary>Embedded Python</summary>
+  <description>
+This extension allows the Python interpreter to be embedded inside of PHP, allowing for the instantiate and manipulation of Python objects from within PHP.
+  </description>
+  <status>alpha</status>
+  <maintainer>
+    <user>jon</user>
+    <name>Jon Parise</name>
+    <email>jon@php.net</email>
+    <role>lead</role>
+  </maintainer>
+  <license>PHP</license>
+  <release>
+    <version>0.1</version>
+    <date>2002-07-28</date>
+    <state>alpha</state>
+    <notes>
+- Initial PECL release
+    </notes>
+    <configureoptions>
+      <configureoption name="with-python" default="autodetect" prompt="Python installation directory? "/>
+    </configureoptions>
+  </release>
+  <filelist>
+    <file role="doc">CREDITS</file>
+    <file role="doc">EXPERIMENTAL</file>
+    <file role="ext">config.m4</file>
+    <file role="ext">Makefile.in</file>
+    <file role="ext">python.c</file>
+    <file role="ext">python.dsp</file>
+    <file role="ext">php_python.h</file>
+  </filelist>
+</package>
+
