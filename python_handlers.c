@@ -65,7 +65,7 @@ python_property_read(zval *object, zval *member, zend_bool silent TSRMLS_DC)
 	MAKE_STD_ZVAL(return_value);
 	ZVAL_NULL(return_value);
 
-	obj = PIP_FETCH(object);
+	obj = PY_FETCH(object);
 
 	if (obj && obj->object) {
 		PyObject *attr = NULL;
@@ -91,7 +91,7 @@ python_property_write(zval *object, zval *member, zval *value TSRMLS_DC)
 	php_python_object *obj;
 	PyObject *val = NULL;
 
-	obj = PIP_FETCH(object);
+	obj = PY_FETCH(object);
 	val = pip_zval_to_pyobject(&value);
 
 	if (obj && obj->object && val) {
@@ -113,7 +113,7 @@ python_read_dimension(zval *object, zval *offset TSRMLS_DC)
 	MAKE_STD_ZVAL(return_value);
 	ZVAL_NULL(return_value);
 
-	obj = PIP_FETCH(object);
+	obj = PY_FETCH(object);
 
 	if (obj && obj->object) {
 		if (PySequence_Check(obj->object) == 1) {
@@ -150,7 +150,7 @@ python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 	php_python_object *obj;
 	PyObject *val = NULL;
 
-	obj = PIP_FETCH(object);
+	obj = PY_FETCH(object);
 	val = pip_zval_to_pyobject(&value);
 
 	if (obj && obj->object && val) {
@@ -194,7 +194,7 @@ python_property_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 {
 	php_python_object *obj;
 
-	obj = PIP_FETCH(object);
+	obj = PY_FETCH(object);
 
 	if (obj && obj->object) {
 		convert_to_string_ex(&member);
@@ -213,7 +213,7 @@ python_dimension_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 	PyObject *attr = NULL;
 	int ret = 0;
    
-	obj = PIP_FETCH(object);
+	obj = PY_FETCH(object);
 
 	convert_to_string_ex(&member);
 
@@ -232,7 +232,7 @@ python_property_delete(zval *object, zval *member TSRMLS_DC)
 {
 	php_python_object *obj;
 
-	obj = PIP_FETCH(object);
+	obj = PY_FETCH(object);
 
 	if (obj && obj->object) {
 		convert_to_string_ex(&member);
@@ -247,7 +247,7 @@ python_property_delete(zval *object, zval *member TSRMLS_DC)
 static void
 python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
 {
-	php_python_object *obj = PIP_FETCH(object);
+	php_python_object *obj = PY_FETCH(object);
 
 	if (obj && obj->object) {
 		if (PySequence_Check(obj->object) == 1) {
@@ -280,7 +280,7 @@ python_method_get(zval *object, char *name, int len TSRMLS_DC)
 	zend_internal_function *f = NULL;
 	PyObject *method = NULL;
 
-	obj = PIP_FETCH(object);
+	obj = PY_FETCH(object);
 
 	/* Quickly check if this object has a method with the requested name. */
 	if (!obj || PyObject_HasAttrString(obj->object, name) == 0) {
@@ -320,7 +320,7 @@ python_call_method(char *method_name, INTERNAL_FUNCTION_PARAMETERS)
 	int argc = ZEND_NUM_ARGS();
    
 	/* Dereference ourself to acquire a php_python_object pointer. */
-	obj = PIP_FETCH(getThis());
+	obj = PY_FETCH(getThis());
 
 	/* Get a pointer to the requested method from this object. */
 	method = PyObject_GetAttrString(obj->object, method_name);
@@ -364,7 +364,7 @@ python_call_method(char *method_name, INTERNAL_FUNCTION_PARAMETERS)
 static union _zend_function *
 python_constructor_get(zval *object TSRMLS_DC)
 {
-	php_python_object *obj = PIP_FETCH(object);
+	php_python_object *obj = PY_FETCH(object);
 
 	return obj->ce->constructor;
 }
@@ -374,7 +374,7 @@ python_constructor_get(zval *object TSRMLS_DC)
 static zend_class_entry *
 python_class_entry_get(zval *object TSRMLS_DC)
 {
-	php_python_object *obj = PIP_FETCH(object);
+	php_python_object *obj = PY_FETCH(object);
 	assert(obj);
 
 	return obj->ce;
@@ -386,7 +386,7 @@ static int
 python_class_name_get(zval *object, char **class_name,
 					  zend_uint *class_name_len, int parent TSRMLS_DC)
 {
-	php_python_object *obj = PIP_FETCH(object);
+	php_python_object *obj = PY_FETCH(object);
 
     *class_name = estrndup(obj->ce->name, obj->ce->name_length);
     *class_name_len = obj->ce->name_length;
@@ -401,8 +401,8 @@ python_objects_compare(zval *object1, zval *object2 TSRMLS_DC)
 {
 	php_python_object *a, *b;
 
-	a = PIP_FETCH(object1);
-	b = PIP_FETCH(object2);
+	a = PY_FETCH(object1);
+	b = PY_FETCH(object2);
 
 	return PyObject_Compare(a->object, b->object);
 }
@@ -422,7 +422,7 @@ python_object_cast(zval *readobj, zval *writeobj, int type,
 
 	ZVAL_NULL(writeobj);
 
-	obj = PIP_FETCH(readobj);
+	obj = PY_FETCH(readobj);
 
 	switch (type) {
 		case IS_LONG:

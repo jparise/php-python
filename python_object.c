@@ -179,7 +179,7 @@ PHP_FUNCTION(python_new)
 	int module_name_len, class_name_len;
 
 	/* Dereference ourself to acquire a php_python_object pointer. */
-	obj = PIP_FETCH(getThis());
+	obj = PY_FETCH(getThis());
 
 	/*
 	 * We expect at least two parameters: the module name and the class name.

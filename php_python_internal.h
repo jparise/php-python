@@ -39,7 +39,7 @@ typedef struct _php_python_object {
     zend_class_entry *	ce;
 } php_python_object;
 
-#define PIP_FETCH(zv)	(php_python_object *)zend_object_store_get_object(zv TSRMLS_CC)
+#define PY_FETCH(zv)	(php_python_object *)zend_object_store_get_object(zv TSRMLS_CC)
 
 zend_object_value python_object_create(zend_class_entry *ce TSRMLS_DC);
 void python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC);
