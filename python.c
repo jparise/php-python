@@ -269,15 +269,14 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 	 */
 	if ((zend_llist_count(property_reference->elements_list) == 1) &&
 		(strcmp("python", Z_STRVAL(function_name->element)) == 0)) {
-		char *module_name, *object_name;
-		int module_name_len, object_name_len;
-		zval *arguments = NULL;
+		char *module_name, *class_name;
+		int module_name_len, class_name_len;
 		PyObject *module;
+		int argc = ZEND_NUM_ARGS();
 
-		if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|a",
-								  &module_name, &module_name_len,
-								  &object_name, &object_name_len,
-								  &arguments) == FAILURE) {
+		/* Parse only the first two arguments (module name and class name). */
+		if (zend_parse_parameters(2, "ss", &module_name, &module_name_len,
+								  &class_name, &class_name_len) == FAILURE) {
 			return;
 		}
 
@@ -287,17 +286,13 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 
 			dict = PyModule_GetDict(module);
 			
-			item = PyDict_GetItemString(dict, object_name);
+			item = PyDict_GetItemString(dict, class_name);
 			if (item) {
 				PyObject *obj, *args = NULL;
 				pval *handle;
 
-				/* Build the argument list (as a tuple) */
-				if (arguments) {
-					args = pip_hash_to_tuple(&arguments);
-				}
-
 				/* Create a new Python object by calling the constructor */
+				args = pip_args_to_tuple(argc, 2);
 				obj = PyObject_CallObject(item, args);
 				if (args) {
 					Py_DECREF(args);
@@ -377,20 +372,9 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 			/* If the method exists and is callable ... */
 			if (method && PyCallable_Check(method)) {
 				PyObject *args, *result = NULL;
-				int argc = ZEND_NUM_ARGS();
-				pval **argv;
-
-				/* Build the argument list */
-				argv = (pval **) emalloc(sizeof(pval *) * argc);
-				zend_get_parameters_array(ht, argc, argv);
-
-				args = PyTuple_New(argc);
-				for (i = 0; i < argc; i++) {
-					PyTuple_SetItem(args,i,pip_zval_to_pyobject(&argv[i]));
-				}
-				efree(argv);
 
 				/* Invoke the requested method on the object */
+				args = pip_args_to_tuple_ex(ht, ZEND_NUM_ARGS() TSRMLS_CC, 0);
 				result = PyObject_CallObject(method, args);
 				Py_DECREF(method);
 				Py_DECREF(args);
@@ -792,18 +776,17 @@ PHP_FUNCTION(py_call)
 {
 	char *module_name, *function_name;
 	int module_name_len, function_name_len;
-	zval *arguments = NULL;
 	PyObject *module = NULL;
+	int argc = ZEND_NUM_ARGS();
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|a",
-							  &module_name, &module_name_len,
-							  &function_name, &function_name_len,
-							  &arguments) == FAILURE) {
+	/* Parse only the first two parameters (module name and function name). */
+	if (zend_parse_parameters(2, "ss", &module_name, &module_name_len,
+							  &function_name, &function_name_len) == FAILURE) {
 		return;
 	}
 
 	module = PyImport_ImportModule(module_name);
-	if (module != NULL) {
+	if (module) {
 		PyObject *dict, *function;
 
 		dict = PyModule_GetDict(module);
@@ -812,12 +795,8 @@ PHP_FUNCTION(py_call)
 		if (function) {
 			PyObject *args = NULL, *result = NULL;
 
-			/* Build the argument list (as a tuple) */
-			if (arguments) {
-				args = pip_hash_to_tuple(&arguments);
-			}
-
 			/* Call the function with a tuple of arguments */
+			args = pip_args_to_tuple(argc, 2);
 			result = PyObject_CallObject(function, args);
 
 			Py_DECREF(function);
@@ -825,7 +804,7 @@ PHP_FUNCTION(py_call)
 				Py_DECREF(args);
 			}
 
-			if (result != NULL) {
+			if (result) {
 				/* Convert the Python result to its PHP equivalent */
 				*return_value = *pip_pyobject_to_zval(result);
 				zval_copy_ctor(return_value);

@@ -372,6 +372,75 @@ pip_pyobject_to_zval(PyObject *obj)
 }
 /* }}} */
 
+/* {{{ pip_args_to_tuple(int argc, int start)
+   Converts PHP arguments into a Python tuple suitable for argument passing */
+PyObject * pip_args_to_tuple(int argc, int start)
+{
+	zval ***zargs = NULL;
+	PyObject *args = NULL;
+
+	if (argc < start) {
+		return NULL;
+	}
+
+	/* Allocate enough memory for all of the arguments. */
+	if ((zargs = (zval ***) emalloc(sizeof(zval **) * argc)) == NULL) {
+		return NULL;
+	}
+
+	/* Get the array of PHP parameters. */
+	if (zend_get_parameters_array_ex(argc, zargs) == SUCCESS) {
+		int i = 0;
+
+		args = PyTuple_New(argc - start);
+
+		/* Add each parameter to a new tuple. */
+		for (i = start; i < argc; i++) {
+			PyObject *arg = pip_zval_to_pyobject(zargs[i]);
+			PyTuple_SetItem(args, i - start, arg);
+		}
+	}
+
+	efree(zargs);
+
+	return args;
+}
+/* }}} */
+
+/* {{{ pip_args_to_tuple_ex(int ht, int argc, int start)
+   Converts PHP arguments into a Python tuple suitable for argument passing */
+PyObject * pip_args_to_tuple_ex(int ht, int argc, int start)
+{
+	zval **zargs = NULL;
+	PyObject *args = NULL;
+
+	if (argc < start) {
+		return NULL;
+	}
+
+	/* Allocate enough memory for all of the arguments. */
+	if ((zargs = (zval **) emalloc(sizeof(zval *) * argc)) == NULL) {
+		return NULL;
+	}
+
+	/* Get the array of PHP parameters. */
+	if (zend_get_parameters_array(ht, argc, zargs) == SUCCESS) {
+		int i = 0;
+
+		args = PyTuple_New(argc - start);
+
+		/* Add each parameter to a new tuple. */
+		for (i = start; i < argc; i++) {
+			PyObject *arg = pip_zval_to_pyobject(&zargs[i]);
+			PyTuple_SetItem(args, i - start, arg);
+		}
+	}
+
+	efree(zargs);
+
+	return args;
+}
+
 /*
  * Local variables:
  * c-basic-offset: 4
