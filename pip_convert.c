@@ -371,3 +371,12 @@ pip_pyobject_to_zval(PyObject *obj)
 	return ret;
 }
 /* }}} */
+
+/*
+ * Local variables:
+ * c-basic-offset: 4
+ * tab-width: 4
+ * End:
+ * vim600: fdm=marker
+ * vim: sw=4 ts=4 noet
+ */
