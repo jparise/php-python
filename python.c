@@ -512,7 +512,7 @@ zend_module_entry python_module_entry = {
 	STANDARD_MODULE_PROPERTIES
 };
 
-#ifdef COMPILE_DL_W32API
+#ifdef COMPILE_DL_PYTHON
 ZEND_GET_MODULE(python)
 #endif
 /* }}} */
