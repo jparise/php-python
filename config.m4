@@ -24,6 +24,10 @@ if test "$PHP_PYTHON" != "no"; then
      AC_MSG_ERROR(Please specify path to Python distribution files)
   fi
 
+  AC_CHECK_LIB(dl, dlopen, [
+    LIBS="-ldl $LIBS"                                                       
+  ])
+
   dnl # --with-python -> chech for lib and symbol presence
   LIBNAME=python2.2
   LIBSYMBOL=Py_Initialize
@@ -32,7 +36,7 @@ if test "$PHP_PYTHON" != "no"; then
   AC_CHECK_LIB($LIBNAME, $LIBSYMBOL, [AC_DEFINE(HAVE_PYTHONLIB,1,[ ])],
 		[AC_MSG_ERROR(wrong Python lib version or lib not found)])
   LIBS=$old_LIBS
-  
+
   PHP_SUBST(PYTHON_SHARED_LIBADD)
   PHP_ADD_LIBRARY_WITH_PATH($LIBNAME, $PYTHON_DIR/lib/python2.2/config, PYTHON_SHARED_LIBADD)
   PHP_ADD_LIBRARY(m)
