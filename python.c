@@ -476,22 +476,51 @@ static PyMethodDef php_methods[] = {
  * call PHP functions made available by the "php" module constructed above.
  */
 
-/* {{{ globals
-*/
-ZEND_BEGIN_MODULE_GLOBALS(python)
-	PyObject *interpreters;
-	char *paths;
-ZEND_END_MODULE_GLOBALS(python)
+/* Utility Functions */
 
-ZEND_DECLARE_MODULE_GLOBALS(python)
-/* }}} */
-
-/* {{{ init_globals
+/* {{{ _prepend_syspath
  */
 static void
-init_globals(zend_python_globals *python_globals TSRMLS_DC)
+_prepend_syspath(const char *dir)
 {
-	memset(python_globals, 0, sizeof(zend_python_globals));
+	if (dir) {
+		PyObject *sys;
+		PyObject *path;
+		PyObject *dirstr;
+
+		sys = PyImport_ImportModule("sys");
+		path = PyObject_GetAttrString(sys, "path");
+		dirstr = PyString_FromString(dir);
+
+		/* Prepend dir to sys.path if it's not already there. */
+		if (PySequence_Index(path, dirstr) == -1) {
+			PyObject *list;
+			PyErr_Clear();
+			list = Py_BuildValue("[O]", dirstr);
+			PyList_SetSlice(path, 0, 0, list);
+			Py_DECREF(list);
+		}
+
+		Py_DECREF(dirstr);
+		Py_DECREF(path);
+		Py_DECREF(sys);
+	}
+}
+/* }}} */
+
+/* {{{ python_addpaths
+ */
+static void
+python_addpaths(const char *paths)
+{
+	char *delim = ":;";
+	char *path = NULL;
+
+	path = strtok((char *)paths, delim);
+	while (path != NULL) {
+		_prepend_syspath(path);
+		path = strtok(NULL, delim);
+	}
 }
 /* }}} */
 
@@ -518,49 +547,24 @@ python_error(int error_type)
 }
 /* }}} */
 
-/* {{{ python_prependpath
- */
-static void
-python_prependpath(const char *dir)
-{
-	if (dir) {
-		PyObject *sys;
-		PyObject *path;
-		PyObject *dirstr;
+/* PHP Extension Stuff */
 
-		/* Prepend dir to sys.path if it's not already there. */
-		sys = PyImport_ImportModule("sys");
-		path = PyObject_GetAttrString(sys, "path");
-		dirstr = PyString_FromString(dir);
+/* {{{ globals
+*/
+ZEND_BEGIN_MODULE_GLOBALS(python)
+	PyObject *interpreters;
+	char *paths;
+ZEND_END_MODULE_GLOBALS(python)
 
-		if (PySequence_Index(path, dirstr) == -1) {
-			PyObject *list;
-			PyErr_Clear();
-			list = Py_BuildValue("[O]", dirstr);
-			PyList_SetSlice(path, 0, 0, list);
-			Py_DECREF(list);
-		}
-
-		Py_DECREF(dirstr);
-		Py_DECREF(path);
-		Py_DECREF(sys);
-	}
-}
+ZEND_DECLARE_MODULE_GLOBALS(python)
 /* }}} */
 
-/* {{{ python_addpaths
+/* {{{ init_globals
  */
 static void
-python_addpaths(const char *paths)
+init_globals(zend_python_globals *python_globals TSRMLS_DC)
 {
-	char *delim = ":;";
-	char *path = NULL;
-
-	path = strtok((char *)paths, delim);
-	while (path != NULL) {
-		python_prependpath(path);
-		path = strtok(NULL, delim);
-	}
+	memset(python_globals, 0, sizeof(zend_python_globals));
 }
 /* }}} */
 
@@ -923,6 +927,8 @@ PHP_MINFO_FUNCTION(python)
 	php_info_print_table_end();
 }
 /* }}} */
+
+/* PHP Python Functions */
 
 /* {{{ proto void py_eval(string code)
    Evaluate the given string of code by passing it to the interpreter */
