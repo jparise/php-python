@@ -6,12 +6,14 @@
 This extension allows the Python interpreter to be embedded inside of PHP, allowing for the instantiate and manipulation of Python objects from within PHP.
   </description>
   <status>alpha</status>
-  <maintainer>
-    <user>jon</user>
-    <name>Jon Parise</name>
-    <email>jon@php.net</email>
-    <role>lead</role>
-  </maintainer>
+  <maintainers>
+    <maintainer>
+      <user>jon</user>
+      <name>Jon Parise</name>
+      <email>jon@php.net</email>
+      <role>lead</role>
+    </maintainer>
+  </maintainers>
   <license>PHP</license>
   <release>
     <version>0.1</version>
