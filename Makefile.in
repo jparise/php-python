@@ -1,7 +1,7 @@
 # $Id$
 
 LTLIBRARY_NAME        = libpython.la
-LTLIBRARY_SOURCES     = python.c
+LTLIBRARY_SOURCES     = python.c pip_convert.c
 LTLIBRARY_SHARED_NAME = python.la
 LTLIBRARY_SHARED_LIBADD  = $(PYTHON_SHARED_LIBADD)
 
