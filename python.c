@@ -292,7 +292,7 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 				zval *handle;
 
 				/* Create a new Python object by calling the constructor */
-				args = pip_args_to_tuple(argc, 2);
+				args = pip_args_to_tuple(argc, 2 TSRMLS_CC);
 				obj = PyObject_CallObject(item, args);
 				if (args) {
 					Py_DECREF(args);
@@ -793,7 +793,7 @@ PHP_FUNCTION(py_call)
 			PyObject *args = NULL, *result = NULL;
 
 			/* Call the function with a tuple of arguments */
-			args = pip_args_to_tuple(argc, 2);
+			args = pip_args_to_tuple(argc, 2 TSRMLS_CC);
 			result = PyObject_CallObject(function, args);
 
 			Py_DECREF(function);

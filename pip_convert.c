@@ -379,7 +379,7 @@ pip_pyobject_to_zval(PyObject *obj)
 
 /* {{{ pip_args_to_tuple(int argc, int start)
    Converts PHP arguments into a Python tuple suitable for argument passing */
-PyObject * pip_args_to_tuple(int argc, int start)
+PyObject * pip_args_to_tuple(int argc, int start TSRMLS_DC)
 {
 	zval ***zargs = NULL;
 	PyObject *args = NULL;
@@ -414,7 +414,7 @@ PyObject * pip_args_to_tuple(int argc, int start)
 
 /* {{{ pip_args_to_tuple_ex(int ht, int argc, int start)
    Converts PHP arguments into a Python tuple suitable for argument passing */
-PyObject * pip_args_to_tuple_ex(int ht, int argc, int start)
+PyObject * pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC)
 {
 	zval **zargs = NULL;
 	PyObject *args = NULL;
