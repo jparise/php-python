@@ -377,7 +377,9 @@ python_call_function_handler(INTERNAL_FUNCTION_PARAMETERS,
 				args = pip_args_to_tuple_ex(ht, ZEND_NUM_ARGS() TSRMLS_CC, 0);
 				result = PyObject_CallObject(method, args);
 				Py_DECREF(method);
-				Py_DECREF(args);
+				if (args) {
+					Py_DECREF(args);
+				}
 
 				if (result != NULL) {
 					/* Convert the Python result to its PHP equivalent */
