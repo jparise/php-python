@@ -480,6 +480,7 @@ static PyMethodDef php_methods[] = {
 */
 ZEND_BEGIN_MODULE_GLOBALS(python)
 	PyObject *interpreters;
+	char *paths;
 ZEND_END_MODULE_GLOBALS(python)
 
 ZEND_DECLARE_MODULE_GLOBALS(python)
@@ -514,6 +515,52 @@ python_error(int error_type)
 	/* Output the error to the user using php_error. */
 	php_error(error_type, "Python: [%s] '%s'", PyString_AsString(type),
 			  PyString_AsString(value));
+}
+/* }}} */
+
+/* {{{ python_prependpath
+ */
+static void
+python_prependpath(const char *dir)
+{
+	if (dir) {
+		PyObject *sys;
+		PyObject *path;
+		PyObject *dirstr;
+
+		/* Prepend dir to sys.path if it's not already there. */
+		sys = PyImport_ImportModule("sys");
+		path = PyObject_GetAttrString(sys, "path");
+		dirstr = PyString_FromString(dir);
+
+		if (PySequence_Index(path, dirstr) == -1) {
+			PyObject *list;
+			PyErr_Clear();
+			list = Py_BuildValue("[O]", dirstr);
+			PyList_SetSlice(path, 0, 0, list);
+			Py_DECREF(list);
+		}
+
+		Py_DECREF(dirstr);
+		Py_DECREF(path);
+		Py_DECREF(sys);
+	}
+}
+/* }}} */
+
+/* {{{ python_addpaths
+ */
+static void
+python_addpaths(const char *paths)
+{
+	char *delim = ":;";
+	char *path = NULL;
+
+	path = strtok((char *)paths, delim);
+	while (path != NULL) {
+		python_prependpath(path);
+		path = strtok(NULL, delim);
+	}
 }
 /* }}} */
 
@@ -789,6 +836,13 @@ zend_module_entry python_module_entry = {
 	STANDARD_MODULE_PROPERTIES
 };
 
+/* {{{ PHP_INI
+ */
+PHP_INI_BEGIN()
+	STD_PHP_INI_ENTRY("python.paths",		".",		PHP_INI_ALL,	OnUpdateString,		paths,          zend_python_globals,   python_globals)
+PHP_INI_END()
+/* }}} */
+
 #ifdef COMPILE_DL_W32API
 ZEND_GET_MODULE(python)
 #endif
@@ -823,13 +877,9 @@ PHP_MINIT_FUNCTION(python)
 	le_pyobject = zend_register_list_destructors_ex(python_destructor, NULL,
 													"python", module_number);
 
-#if 0
-	/* Register INI file entries */
-	REGISTER_INI_ENTRIES();
-#endif
-
-	/* Initialize global variables */
+	/* Initialize global variables and INI file entries */
 	ZEND_INIT_MODULE_GLOBALS(python, init_globals, NULL);
+	REGISTER_INI_ENTRIES();
 
 	/*
 	 * XXX What kind of performance hit are we taking here?  Maybe this
@@ -842,6 +892,9 @@ PHP_MINIT_FUNCTION(python)
 	/* Initialize the PHP module for Python (see above) */
 	Py_InitModule3("php", php_methods, "PHP Module");
 
+	/* Add the current directory to Python's sys.path list */
+	python_addpaths(PYG(paths));
+
 	return Py_IsInitialized() ? SUCCESS : FAILURE;
 }
 /* }}} */
@@ -850,6 +903,9 @@ PHP_MINIT_FUNCTION(python)
  */
 PHP_MSHUTDOWN_FUNCTION(python)
 {
+	/* Unregister INI file entries */
+	UNREGISTER_INI_ENTRIES();
+
 	/* Shut down the Python interface */
 	Py_Finalize();
 
