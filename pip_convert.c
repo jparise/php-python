@@ -330,11 +330,10 @@ pip_pyobject_to_zobject(PyObject *obj)
 
 	/* Assign the current PyObject to the new PHP Python object */
 	ALLOC_ZVAL(handle);
-	Z_TYPE_P(handle) = IS_LONG;
-	Z_LVAL_P(handle) = zend_list_insert(obj, le_pyobject);
-	pval_copy_constructor(handle);
+	ZVAL_RESOURCE(handle, zend_list_insert(obj, le_pyobject));
+	zval_copy_ctor(handle);
 	INIT_PZVAL(handle);
-	zend_hash_index_update(Z_OBJPROP_P(ret), 0, &handle, sizeof(pval *), NULL);
+	zend_hash_index_update(Z_OBJPROP_P(ret), 0, &handle, sizeof(zval *), NULL);
 
 	return ret;
 }
