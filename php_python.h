@@ -34,16 +34,16 @@ extern zend_module_entry python_module_entry;
 #include "TSRM.h"
 #endif
 
-#ifdef ZTS
-#define W32_G(v) TSRMG(python_globals_id, zend_python_globals *, v)
-#else
-#define W32_G(v) (python_globals.v)
-#endif
-
 PHP_MINFO_FUNCTION(python);
 PHP_MINIT_FUNCTION(python);
 PHP_MSHUTDOWN_FUNCTION(python);
 
 PHP_FUNCTION(py_eval);
+
+#ifdef ZTS
+#define PYG(v) TSRMG(python_globals_id, zend_python_globals *, v)
+#else
+#define PYG(v) (python_globals.v)
+#endif
 
 #endif /* PHP_PYTHON_H */
