@@ -29,11 +29,16 @@ This extension allows the Python interpreter to be embedded inside of PHP, allow
   <filelist>
     <file role="doc">CREDITS</file>
     <file role="doc">EXPERIMENTAL</file>
-    <file role="ext">config.m4</file>
-    <file role="ext">Makefile.in</file>
-    <file role="ext">python.c</file>
-    <file role="ext">python.dsp</file>
-    <file role="ext">php_python.h</file>
+    <file role="src">config.m4</file>
+    <file role="src">Makefile.in</file>
+    <file role="src">python.c</file>
+    <file role="src">python.dsp</file>
+    <file role="src">php_python.h</file>
     <file role="test">tests/001.phpt</file>
+    <file role="test">tests/002.phpt</file>
+    <file role="test">tests/003.phpt</file>
+    <file role="test">tests/005.phpt</file>
+    <file role="test">tests/006.phpt</file>
+    <file role="test">tests/007.phpt</file>
   </filelist>
 </package>
