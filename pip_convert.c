@@ -446,6 +446,7 @@ PyObject * pip_args_to_tuple_ex(int ht, int argc, int start)
 
 	return args;
 }
+/* }}} */
 
 /*
  * Local variables:
