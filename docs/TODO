@@ -1,0 +1,20 @@
+$Id$
+
+Legacy Items from Version 0.7.0
+===============================
+- multiple interpreters (one per request?)
+- use PyImport_ImportModuleEx() to set globals and locals
+- investigate standard common functions for all imported Python objects
+- allow modules to be manipulated as objects from PHP
+- allow passing associative arrays for keyword arguments
+- preload modules from php.ini
+- true conversion of PHP objects
+- investigate ability to extend Python objects using PHP objects
+- safe_mode checks where applicable
+- display the traceback upon an exception (optionally?)
+- redirect Python stderr back to PHP
+- check for attribute existence in python_attribute_handler()
+- var_dump($python_object) should list attributes (and methods)
+- py_import() should accept arrays and support 'from foo import bar'
+- Store an object's dir() dictionary alongside its object handle.
+
