@@ -1,22 +1,28 @@
 /*
-   +----------------------------------------------------------------------+
-   | PHP Version 4                                                        |
-   +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2003 The PHP Group                                |
-   +----------------------------------------------------------------------+
-   | This source file is subject to version 3.0 of the PHP license,       |
-   | that is bundled with this package in the file LICENSE, and is        |
-   | available through the world-wide-web at the following url:           |
-   | http://www.php.net/license/3_0.txt.                                  |
-   | If you did not receive a copy of the PHP license and are unable to   |
-   | obtain it through the world-wide-web, please send a note to          |
-   | license@php.net so we can mail you a copy immediately.               |
-   +----------------------------------------------------------------------+
-   | Author: Jon Parise  <jon@php.net>                                    |
-   +----------------------------------------------------------------------+
+ * Python in PHP - Embedded Python Extension
+ *
+ * Copyright (c) 2003,2004,2005,2006 Jon Parise <jon@php.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ *
+ * $Id$
  */
-
-/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -27,29 +33,11 @@
 #include "php.h"
 #include "php_python_internal.h"
 
-/* {{{ python_object_create(zend_class_entry *ce TSRMLS_DC)
- */
-zend_object_value
-python_object_create(zend_class_entry *ce TSRMLS_DC)
-{
-	php_python_object *obj;
-	zend_object_value retval;
+extern zend_object_handlers python_object_handlers;
 
-	obj = emalloc(sizeof(php_python_object));
-	memset(obj, 0, sizeof(php_python_object));
-
-	obj->ce = ce;
-
-	retval.handle = zend_objects_store_put(obj, python_object_destroy,
-										   python_object_clone TSRMLS_CC);
-    retval.handlers = &python_object_handlers;
-
-	return retval;
-}
-/* }}} */
 /* {{{ python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC)
  */
-void
+static void
 python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC)
 {
 	php_python_object *obj = (php_python_object *)object;
@@ -58,6 +46,14 @@ python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC)
 	if (obj->object) {
 		Py_DECREF(obj->object);
 	}
+}
+/* }}} */
+/* {{{ python_object_free(void *object TSRMLS_DC)
+ */
+static void
+python_object_free(void *object TSRMLS_DC)
+{
+	php_python_object *obj = (php_python_object *)object;
 
 	/* Free the object's resources using the PHP allocator. */
 	efree(obj);
@@ -65,19 +61,17 @@ python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC)
 /* }}} */
 /* {{{ python_object_clone(void *object, void **clone_ptr TSRMLS_DC)
  */
-void
+static void
 python_object_clone(void *object, void **clone_ptr TSRMLS_DC)
 {
 	php_python_object *orig, *clone;
-	
-	fprintf(stderr, "python_object_clone\n");
-	
+
 	orig = (php_python_object *)object;
 	clone = (php_python_object *)emalloc(sizeof(php_python_object));
 
 	/*
 	 * XXX: Should we call __copy__ on the original Python object and store the
-	 * resulting in the clone instead of just memcpy'ing the entire structure?
+	 * result in the clone instead of just memcpy'ing the entire structure?
 	 */
 
 	memcpy(clone, orig, sizeof(php_python_object));
@@ -86,6 +80,30 @@ python_object_clone(void *object, void **clone_ptr TSRMLS_DC)
 	Py_INCREF(clone->object);
 
 	*clone_ptr = clone;
+}
+/* }}} */
+/* {{{ python_object_create(zend_class_entry *ce TSRMLS_DC)
+ */
+zend_object_value
+python_object_create(zend_class_entry *ce TSRMLS_DC)
+{
+	php_python_object *obj;
+	zend_object_value retval;
+
+	/* Allocate and initialize the PHP Python object structure. */
+	obj = emalloc(sizeof(php_python_object));
+	obj->object = NULL;
+	obj->ce = ce;
+
+	/* Add this instance to the objects store using the Zend Objects API. */
+	retval.handle = zend_objects_store_put(obj,
+										   python_object_destroy,
+										   python_object_free,
+										   python_object_clone TSRMLS_CC);
+    retval.handlers = &python_object_handlers;
+
+	/* Return the object reference to the caller. */
+	return retval;
 }
 /* }}} */
 
@@ -169,67 +187,6 @@ python_get_arg_info(PyObject *callable, zend_arg_info **arg_info)
 }
 /* }}} */
 
-/* {{{ PHP_FUNCTION(python_new)
- */
-PHP_FUNCTION(python_new)
-{
-	php_python_object *obj;
-	PyObject *module;
-	char *module_name, *class_name;
-	int module_name_len, class_name_len;
-
-	/* Dereference ourself to acquire a php_python_object pointer. */
-	obj = PY_FETCH(getThis());
-
-	/*
-	 * We expect at least two parameters: the module name and the class name.
-	 * Any additional parameters will be passed to the Python __init__ method
-	 * down below.
-	 */
-	if (zend_parse_parameters(2 TSRMLS_CC, "ss",
-							  &module_name, &module_name_len,
-							  &class_name, &class_name_len) == FAILURE) {
-		printf("Woops\n");
-		return;
-	}
-
-	module = PyImport_ImportModule(module_name);
-	if (module) {
-		PyObject *dict, *class;
-
-		/*
-		 * The module's dictionary holds references to all of its members.  Use
-		 * it to acquire a pointer to the requested class.
-		 */
-		dict = PyModule_GetDict(module);
-		class = PyDict_GetItemString(dict, class_name);
-
-		/* If the class exists and is callable ... */
-		if (class && PyCallable_Check(class)) {
-			PyObject *args = NULL;
-
-			/*
-			 * Convert our PHP arguments into a Python-digestable tuple.  We
-			 * skip the first two arguments (module name, class name) and pass
-			 * the rest to the Python constructor.
-			 */
-			args = pip_args_to_tuple(ZEND_NUM_ARGS(), 2 TSRMLS_CC);
-
-			/*
-			 * Call the class's constructor and store the resulting object.  If
-			 * we have a tuple of arguments, remember to free (decref) it.
-			 */
-			obj->object = PyObject_CallObject(class, args);
-			if (args) {
-				Py_DECREF(args);
-			}
-
-			/* Our new object should be an instance of the requested class. */
-			assert(PyObject_IsInstance(obj->object, class) == 1);
-		}
-	}
-}
-/* }}} */
 
 /*
  * Local variables:

@@ -8,13 +8,12 @@ if (PHP_PYTHON != "no") {
 		PHP_PYTHON = WshShell.Environment("Process").Item("PYTHONHOME");
 	}
 
-	var libname = PHP_DEBUG == "yes" ? "python23_d.lib" : "python23.lib";
+	var libname = PHP_DEBUG == "yes" ? "python24_d.lib" : "python24.lib";
 
 	if (CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON",
 								 PHP_PYTHON + "\\include") &&
 		 CHECK_LIB(libname, "python", PHP_PYTHON + "\\libs")) {
-		EXTENSION("python", "python.c python_convert.c python_handlers.c python_object.c",
-				  null, "/D PYTHON_EXPORTS");
+		EXTENSION("python", "python.c python_convert.c python_handlers.c python_object.c", null, "/D PYTHON_EXPORTS");
 		AC_DEFINE("HAVE_PYTHON", 1);
 	} else {
 		WARNING("python not enabled; libraries and headers not found");
