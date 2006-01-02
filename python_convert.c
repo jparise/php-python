@@ -237,7 +237,7 @@ pip_sequence_to_hash(PyObject *seq, HashTable *ht TSRMLS_DC)
 		/* Get the item in this slot and convert it to a zval. */
 		item = PySequence_GetItem(seq, i);
 		val = pip_pyobject_to_zval(item TSRMLS_CC);
-		if (item) Py_DECREF(item);
+		Py_XDECREF(item);
 
 		/* Append the zval to our hash. */
 		if (zend_hash_next_index_insert(ht, (void *)&val, sizeof(zval *),
