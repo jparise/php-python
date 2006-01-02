@@ -143,7 +143,7 @@ python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 	 */
 	if (Z_TYPE_P(offset) == IS_LONG && PySequence_Check(pip->object)) {
 		if (PySequence_SetItem(pip->object, Z_LVAL_P(offset), val) == -1)
-			zend_error(E_ERROR, "Failed to set sequence item %d", Z_LVAL_P(offset));
+			php_error(E_ERROR, "Failed to set sequence item %d", Z_LVAL_P(offset));
 	}
 
 	/*
@@ -153,10 +153,10 @@ python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 	else if (PyMapping_Check(pip->object)) {
 		convert_to_string_ex(&offset);
 		if (PyMapping_SetItemString(pip->object, Z_STRVAL_P(offset), val) == -1)
-			zend_error(E_ERROR, "Failed to set mapping item '%s'", Z_STRVAL_P(offset));
+			php_error(E_ERROR, "Failed to set mapping item '%s'", Z_STRVAL_P(offset));
 	}
 
-	if (val) Py_DECREF(val);
+	Py_XDECREF(val);
 }
 /* }}} */
 /* {{{ python_property_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
@@ -239,7 +239,7 @@ python_property_delete(zval *object, zval *member TSRMLS_DC)
 
 	convert_to_string_ex(&member);
 	if (PyObject_DelAttrString(pip->object, Z_STRVAL_P(member)) == -1)
-		zend_error(E_ERROR, "Failed to delete attribute '%s'", Z_STRVAL_P(member));
+		php_error(E_ERROR, "Failed to delete attribute '%s'", Z_STRVAL_P(member));
 }
 /* }}} */
 /* {{{ python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
@@ -269,7 +269,7 @@ python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
 
 	/* If we still haven't deleted the requested item, trigger an error. */
 	if (!deleted)
-		zend_error(E_ERROR, "Failed to delete item");
+		php_error(E_ERROR, "Failed to delete item");
 }
 /* }}} */
 /* {{{ python_get_properties(zval *object TSRMLS_DC)
@@ -317,7 +317,7 @@ python_get_method(zval **object_ptr, char *method, int method_len TSRMLS_DC)
 	/* Attempt to fetch the requested method and verify that it's callable. */
 	func = PyObject_GetAttrString(pip->object, method);
 	if (!func || PyMethod_Check(func) == 0 || PyCallable_Check(func) == 0) {
-		if (func) Py_DECREF(func);
+		Py_XDECREF(func);
 		return NULL;
 	}
 
@@ -365,7 +365,7 @@ python_call_method(char *method_name, INTERNAL_FUNCTION_PARAMETERS)
 		 */
 		result = PyObject_CallObject(method, args); 
 		Py_DECREF(method);
-		if (args) Py_DECREF(args);
+		Py_XDECREF(args);
 
 		if (result) {
 			/* Convert the Python result value to its PHP equivalent. */
@@ -502,25 +502,25 @@ python_count_elements(zval *object, long *count TSRMLS_DC)
  */
 zend_object_handlers python_object_handlers = {
 	ZEND_OBJECTS_STORE_HANDLERS,
-    python_read_property,
-    python_write_property,
-    python_read_dimension,
-    python_write_dimension,
-    NULL,
-    NULL,
-    NULL,
-    python_property_exists,
-    python_property_delete,
-    python_dimension_exists,
-    python_dimension_delete,
-    python_get_properties,
-    python_get_method,
-    python_call_method,
-    python_constructor_get,
-    python_get_class_entry,
-    python_get_class_name,
-    python_compare,
-    python_cast,
+	python_read_property,
+	python_write_property,
+	python_read_dimension,
+	python_write_dimension,
+	NULL,
+	NULL,
+	NULL,
+	python_property_exists,
+	python_property_delete,
+	python_dimension_exists,
+	python_dimension_delete,
+	python_get_properties,
+	python_get_method,
+	python_call_method,
+	python_constructor_get,
+	python_get_class_entry,
+	python_get_class_name,
+	python_compare,
+	python_cast,
 	python_count_elements
 };
 /* }}} */

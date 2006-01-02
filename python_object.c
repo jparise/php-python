@@ -40,12 +40,10 @@ extern zend_object_handlers python_object_handlers;
 static void
 python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC)
 {
-	php_python_object *obj = (php_python_object *)object;
+	php_python_object *pip = (php_python_object *)object;
 
 	/* Release our reference to this Python object. */
-	if (obj->object) {
-		Py_DECREF(obj->object);
-	}
+	Py_XDECREF(pip->object);
 }
 /* }}} */
 /* {{{ python_object_free(void *object TSRMLS_DC)
@@ -53,10 +51,10 @@ python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC)
 static void
 python_object_free(void *object TSRMLS_DC)
 {
-	php_python_object *obj = (php_python_object *)object;
+	php_python_object *pip = (php_python_object *)object;
 
 	/* Free the object's resources using the PHP allocator. */
-	efree(obj);
+	efree(pip);
 }
 /* }}} */
 /* {{{ python_object_clone(void *object, void **clone_ptr TSRMLS_DC)

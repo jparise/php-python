@@ -193,9 +193,12 @@ python_error(int error_type)
 	Py_XDECREF(pvalue);
 	Py_XDECREF(ptraceback);
 
-	/* Output the error to the user using php_error. */
-	php_error(error_type, "Python: [%s] '%s'", PyString_AsString(type),
-			  PyString_AsString(value));
+	if (type && value) {
+		php_error(error_type, "Python: [%s] '%s'", PyString_AsString(type),
+				  PyString_AsString(value));
+		Py_DECREF(type);
+		Py_DECREF(value);
+	}
 }
 /* }}} */
 
