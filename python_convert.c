@@ -31,81 +31,78 @@ extern zend_class_entry python_class_entry;
 
 /* PHP to Python Conversions */
 
-/* {{{ pip_hash_to_list(zval **hash TSRMLS_DC)
-   Convert a PHP hash to a Python list */
+/* {{{ pip_hash_to_list(zval *hash TSRMLS_DC)
+   Convert a PHP hash to a Python list. */
 PyObject *
-pip_hash_to_list(zval **hash TSRMLS_DC)
+pip_hash_to_list(zval *hash TSRMLS_DC)
 {
-	PyObject *list, *item;
+	PyObject *list;
 	zval **entry;
-	long pos = 0;
+	int pos = 0;
 
-	/* Make sure we were given a PHP hash */
-	if (Z_TYPE_PP(hash) != IS_ARRAY) {
+	/* Make sure we were given a PHP hash. */
+	if (Z_TYPE_P(hash) != IS_ARRAY) {
 		return NULL;
 	}
 
-	/* Create a list with the same number of elements as the hash */
-	list = PyList_New(zend_hash_num_elements(Z_ARRVAL_PP(hash)));
+	/* Create a list with the same number of elements as the hash. */
+	list = PyList_New(zend_hash_num_elements(Z_ARRVAL_P(hash)));
 
 	/* Let's start at the very beginning, a very good place to start. */
-	zend_hash_internal_pointer_reset(Z_ARRVAL_PP(hash));
+	zend_hash_internal_pointer_reset(Z_ARRVAL_P(hash));
 
-	/* Iterate over the hash's elements */
-	while (zend_hash_get_current_data(Z_ARRVAL_PP(hash),
+	/*
+	 * Iterate over of the hash's elements.  We ignore the keys and convert
+	 * each value to its Python equivalent before inserting it into the list.
+	 */
+	while (zend_hash_get_current_data(Z_ARRVAL_P(hash),
 									  (void **)&entry) == SUCCESS) {
-
-		/* Convert the PHP value to its Python equivalent */
-		item = pip_zval_to_pyobject(entry TSRMLS_CC);
-
-		/* Add this item to the list and increment the position */
+		PyObject *item = pip_zval_to_pyobject(*entry TSRMLS_CC);
 		PyList_SetItem(list, pos++, item);
-
-		/* Advance to the next entry */
-		zend_hash_move_forward(Z_ARRVAL_PP(hash));
+		zend_hash_move_forward(Z_ARRVAL_P(hash));
 	}
 
 	return list;
 }
 /* }}} */
-/* {{{ pip_hash_to_tuple(zval **hash TSRMLS_DC)
-   Convert a PHP hash to a Python tuple */
+/* {{{ pip_hash_to_tuple(zval *hash TSRMLS_DC)
+   Convert a PHP hash to a Python tuple. */
 PyObject *
-pip_hash_to_tuple(zval **hash TSRMLS_DC)
+pip_hash_to_tuple(zval *hash TSRMLS_DC)
 {
 	return PyList_AsTuple(pip_hash_to_list(hash TSRMLS_CC));
 }
 /* }}} */
-/* {{{ pip_hash_to_dict(zval **hash TSRMLS_DC)
-   Convert a PHP hash to a Python dictionary */
+/* {{{ pip_hash_to_dict(zval *hash TSRMLS_DC)
+   Convert a PHP hash to a Python dictionary. */
 PyObject *
-pip_hash_to_dict(zval **hash TSRMLS_DC)
+pip_hash_to_dict(zval *hash TSRMLS_DC)
 {
-	PyObject *dict, *item, *integer;
+	PyObject *dict, *integer;
 	zval **entry;
 	char *string_key;
-	long num_key = 0;
+	long num_key;
 
-	/* Make sure we were given a PHP hash */
-	if (Z_TYPE_PP(hash) != IS_ARRAY) {
+	/* Make sure we were given a PHP hash. */
+	if (Z_TYPE_P(hash) != IS_ARRAY) {
 		return NULL;
 	}
 
-	/* Create a new empty dictionary */
+	/* Create a new empty dictionary. */
 	dict = PyDict_New();
 
 	/* Let's start at the very beginning, a very good place to start. */
-	zend_hash_internal_pointer_reset(Z_ARRVAL_PP(hash));
+	zend_hash_internal_pointer_reset(Z_ARRVAL_P(hash));
 
-	/* Iterate over the hash's elements */
-	while (zend_hash_get_current_data(Z_ARRVAL_PP(hash),
+	/* Iterate over the hash's elements. */
+	while (zend_hash_get_current_data(Z_ARRVAL_P(hash),
 									  (void **)&entry) == SUCCESS) {
 
-		/* Convert the PHP value to its Python equivalent (recursion) */
-		item = pip_zval_to_pyobject(entry TSRMLS_CC);
+		/* Convert the PHP value to its Python equivalent (recursion). */
+		PyObject *item = pip_zval_to_pyobject(*entry TSRMLS_CC);
 
-		/* Assign the item with the appropriate key type (string or integer) */
-		switch (zend_hash_get_current_key(Z_ARRVAL_PP(hash), &string_key,
+		/* Assign the item with the appropriate key type (string or integer). */
+		switch (zend_hash_get_current_key(Z_ARRVAL_P(hash), &string_key,
 										  &num_key, 0)) {
 			case HASH_KEY_IS_STRING:
 				PyDict_SetItemString(dict, string_key, item);
@@ -117,19 +114,19 @@ pip_hash_to_dict(zval **hash TSRMLS_DC)
 				break;
 		}
 
-		/* Advance to the next entry */
-		zend_hash_move_forward(Z_ARRVAL_PP(hash));
+		/* Advance to the next entry. */
+		zend_hash_move_forward(Z_ARRVAL_P(hash));
 	}
 
 	return dict;
 }
 /* }}} */
-/* {{{ pip_zobject_to_pyobject(zval **obj TSRMLS_DC)
-   Convert a PHP (Zend) object to a Python object */
+/* {{{ pip_zobject_to_pyobject(zval *obj TSRMLS_DC)
+   Convert a PHP (Zend) object to a Python object. */
 PyObject *
-pip_zobject_to_pyobject(zval **obj TSRMLS_DC)
+pip_zobject_to_pyobject(zval *obj TSRMLS_DC)
 {
-	PyObject *dict, *item, *str;
+	PyObject *dict, *str;
 	zval **entry;
 	char *string_key;
 	long num_key;
@@ -143,16 +140,16 @@ pip_zobject_to_pyobject(zval **obj TSRMLS_DC)
 	dict = PyDict_New();
 
 	/* Start at the beginning of the object properties hash */
-	zend_hash_internal_pointer_reset(Z_OBJPROP_PP(obj));
+	zend_hash_internal_pointer_reset(Z_OBJPROP_P(obj));
 
 	/* Iterate over the hash's elements */
-	while (zend_hash_get_current_data(Z_OBJPROP_PP(obj),
+	while (zend_hash_get_current_data(Z_OBJPROP_P(obj),
 									  (void **)&entry) == SUCCESS) {
 
 		/* Convert the PHP value to its Python equivalent (recursion) */
-		item = pip_zval_to_pyobject(entry TSRMLS_CC);
+		PyObject *item = pip_zval_to_pyobject(*entry TSRMLS_CC);
 
-		switch (zend_hash_get_current_key(Z_OBJPROP_PP(obj),
+		switch (zend_hash_get_current_key(Z_OBJPROP_P(obj),
 										  &string_key, &num_key, 0)) {
 			case HASH_KEY_IS_STRING:
 				PyDict_SetItemString(dict, string_key, item);
@@ -163,21 +160,21 @@ pip_zobject_to_pyobject(zval **obj TSRMLS_DC)
 				Py_DECREF(str);
 				break;
 			case HASH_KEY_NON_EXISTANT:
-				php_error(E_ERROR, "No array key");
+				php_error(E_ERROR, "Hash key is nonexistent");
 				break;
 		}
 
 		/* Advance to the next entry */
-		zend_hash_move_forward(Z_OBJPROP_PP(obj));
+		zend_hash_move_forward(Z_OBJPROP_P(obj));
 	}
 
 	return dict;
 }
 /* }}} */
-/* {{{ pip_zval_to_pyobject(zval **val TSRMLS_DC)
-   Converts the given zval into an equivalent PyObject */
+/* {{{ pip_zval_to_pyobject(zval *val TSRMLS_DC)
+   Converts the given zval into an equivalent PyObject. */
 PyObject *
-pip_zval_to_pyobject(zval **val TSRMLS_DC)
+pip_zval_to_pyobject(zval *val TSRMLS_DC)
 {
 	PyObject *ret;
 
@@ -185,18 +182,22 @@ pip_zval_to_pyobject(zval **val TSRMLS_DC)
 		return NULL;
 	}
 
-	switch (Z_TYPE_PP(val)) {
+	switch (Z_TYPE_P(val)) {
 	case IS_BOOL:
-		ret = Py_BuildValue("i", Z_LVAL_PP(val) ? 1 : 0);
+		ret = PyBool_FromLong(Z_LVAL_P(val));
 		break;
 	case IS_LONG:
-		ret = Py_BuildValue("l", Z_LVAL_PP(val));
+		ret = PyLong_FromLong(Z_LVAL_P(val));
 		break;
 	case IS_DOUBLE:
-		ret = Py_BuildValue("d", Z_DVAL_PP(val));
+		ret = PyFloat_FromDouble(Z_DVAL_P(val));
 		break;
 	case IS_STRING:
-		ret = Py_BuildValue("s", Z_STRVAL_PP(val));
+		ret = PyString_FromStringAndSize(Z_STRVAL_P(val), Z_STRLEN_P(val));
+		break;
+	case IS_UNICODE:
+		ret = PyUnicode_FromUnicode((const UChar *)Z_UNIVAL_P(val),
+									Z_UNILEN_P(val));
 		break;
 	case IS_ARRAY:
 		ret = pip_hash_to_dict(val TSRMLS_CC);
@@ -224,8 +225,6 @@ pip_zval_to_pyobject(zval **val TSRMLS_DC)
 int
 pip_sequence_to_hash(PyObject *seq, HashTable *ht TSRMLS_DC)
 {
-	PyObject *item;
-	zval *val;
 	int i;
 
 	/* Make sure this object implements the sequence protocol. */
@@ -235,8 +234,8 @@ pip_sequence_to_hash(PyObject *seq, HashTable *ht TSRMLS_DC)
 
 	for (i = 0; i < PySequence_Size(seq); ++i) {
 		/* Get the item in this slot and convert it to a zval. */
-		item = PySequence_GetItem(seq, i);
-		val = pip_pyobject_to_zval(item TSRMLS_CC);
+		PyObject *item = PySequence_GetItem(seq, i);
+		zval *val = pip_pyobject_to_zval(item TSRMLS_CC);
 		Py_XDECREF(item);
 
 		/* Append the zval to our hash. */
@@ -275,45 +274,36 @@ pip_sequence_to_array(PyObject *seq TSRMLS_DC)
 int
 pip_mapping_to_hash(PyObject *map, HashTable *ht TSRMLS_DC)
 {
-	zval *val;
-	PyObject *keys, *key, *item;
+	PyObject *keys, *key;
 	char *key_name;
 	int i, key_len;
 
-	/* Make sure this object implements the mapping protocol. */
-	if (!PyMapping_Check(map)) {
-		return FAILURE;
-	}
-
 	/* Retrieve the list of keys for this mapping. */
-	keys = PyMapping_Keys(map);
-	if (keys == NULL) {
+	if ((keys = PyMapping_Keys(map)) == NULL) {
 		return FAILURE;
 	}
 
 	/* Iterate over the list of keys. */
 	for (i = 0; i < PySequence_Size(keys); ++i) {
-		key = PySequence_GetItem(keys, i);
-		if (key) {
-			/* Get the string representation of the key. */
-			if (pip_str(key, &key_name, &key_len) != -1) {
-				/* Extract the item for this key. */
-				item = PyMapping_GetItemString(map, key_name);
-				if (item) {
-					val = pip_pyobject_to_zval(item TSRMLS_CC);
+		if (key = PySequence_GetItem(keys, i)) {
+			PyObject *str, *item;
 
-					/* Add the new item to the hash. */
-					if (zend_hash_update(ht, key_name, key_len + 1,
-										 (void *)&val, sizeof(zval *),
-										 NULL) == FAILURE) {
-						php_error(E_ERROR, "Python: hash update failure");
-					}
-					Py_DECREF(item);
-				} else {
-					php_error(E_ERROR, "Python: Could not get item for key");
+			/* Get the string representation of this key. */
+			str = PyObject_Str(key);
+			PyString_AsStringAndSize(str, &key_name, &key_len);
+			Py_XDECREF(str);
+
+			/* Extract the item for this key. */
+			if (item = PyMapping_GetItemString(map, key_name)) {
+				zval *val = pip_pyobject_to_zval(item TSRMLS_CC);
+
+				/* Add the new item to the hash. */
+				if (zend_hash_update(ht, key_name, key_len + 1,
+									 (void *)&val, sizeof(zval *),
+									 NULL) == FAILURE) {
+					php_error(E_ERROR, "Python: hash update failure");
 				}
-			} else {
-				php_error(E_ERROR, "Python: Mapping key conversion error");
+				Py_DECREF(item);
 			}
 			Py_DECREF(key);
 		}
@@ -413,11 +403,12 @@ pip_pyobject_to_zval(PyObject *obj TSRMLS_DC)
 /* Argument Conversions */
 
 /* {{{ pip_args_to_tuple(int argc, int start TSRMLS_DC)
-   Converts PHP arguments into a Python tuple suitable for argument passing */
-PyObject * pip_args_to_tuple(int argc, int start TSRMLS_DC)
+   Converts PHP arguments into a Python tuple suitable for argument passing. */
+PyObject *
+pip_args_to_tuple(int argc, int start TSRMLS_DC)
 {
-	zval ***zargs = NULL;
 	PyObject *args = NULL;
+	zval ***zargs;
 
 	if (argc < start) {
 		return NULL;
@@ -433,14 +424,13 @@ PyObject * pip_args_to_tuple(int argc, int start TSRMLS_DC)
 		int i = 0;
 
 		args = PyTuple_New(argc - start);
-
-		/* Add each parameter to a new tuple. */
 		for (i = start; i < argc; i++) {
-			PyObject *arg = pip_zval_to_pyobject(zargs[i] TSRMLS_CC);
+			PyObject *arg = pip_zval_to_pyobject(*zargs[i] TSRMLS_CC);
 			PyTuple_SetItem(args, i - start, arg);
 		}
 	}
 
+	/* We're done with the PHP parameter array.  Free it. */
 	efree(zargs);
 
 	return args;
@@ -448,10 +438,11 @@ PyObject * pip_args_to_tuple(int argc, int start TSRMLS_DC)
 /* }}} */
 /* {{{ pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC)
    Converts PHP arguments into a Python tuple suitable for argument passing */
-PyObject * pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC)
+PyObject *
+pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC)
 {
-	zval **zargs = NULL;
 	PyObject *args = NULL;
+	zval **zargs;
 
 	if (argc < start) {
 		return NULL;
@@ -467,14 +458,13 @@ PyObject * pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC)
 		int i = 0;
 
 		args = PyTuple_New(argc - start);
-
-		/* Add each parameter to a new tuple. */
 		for (i = start; i < argc; i++) {
-			PyObject *arg = pip_zval_to_pyobject(&zargs[i] TSRMLS_CC);
+			PyObject *arg = pip_zval_to_pyobject(zargs[i] TSRMLS_CC);
 			PyTuple_SetItem(args, i - start, arg);
 		}
 	}
 
+	/* We're done with the PHP parameter array.  Free it. */
 	efree(zargs);
 
 	return args;
