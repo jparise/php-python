@@ -51,11 +51,11 @@ typedef struct _php_python_object {
 zend_object_value python_object_create(zend_class_entry *ce TSRMLS_DC);
 
 /* PHP to Python Conversion */
-PyObject * pip_hash_to_list(zval **hash TSRMLS_DC);
-PyObject * pip_hash_to_tuple(zval **hash TSRMLS_DC);
-PyObject * pip_hash_to_dict(zval **hash TSRMLS_DC);
-PyObject * pip_zobject_to_pyobject(zval **obj TSRMLS_DC);
-PyObject * pip_zval_to_pyobject(zval **val TSRMLS_DC);
+PyObject * pip_hash_to_list(zval *hash TSRMLS_DC);
+PyObject * pip_hash_to_tuple(zval *hash TSRMLS_DC);
+PyObject * pip_hash_to_dict(zval *hash TSRMLS_DC);
+PyObject * pip_zobject_to_pyobject(zval *obj TSRMLS_DC);
+PyObject * pip_zval_to_pyobject(zval *val TSRMLS_DC);
 
 /* Python to PHP Conversion */
 int    pip_sequence_to_hash(PyObject *seq, HashTable *ht TSRMLS_DC);
