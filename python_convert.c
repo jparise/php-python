@@ -195,10 +195,12 @@ pip_zval_to_pyobject(zval *val TSRMLS_DC)
 	case IS_STRING:
 		ret = PyString_FromStringAndSize(Z_STRVAL_P(val), Z_STRLEN_P(val));
 		break;
+#if 0
 	case IS_UNICODE:
 		ret = PyUnicode_FromUnicode((const UChar *)Z_UNIVAL_P(val),
 									Z_UNILEN_P(val));
 		break;
+#endif
 	case IS_ARRAY:
 		ret = pip_hash_to_dict(val TSRMLS_CC);
 		break;
