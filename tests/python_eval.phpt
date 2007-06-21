@@ -1,9 +1,11 @@
 --TEST--
-Python: py_eval()
+Python: python_eval()
 --SKIPIF--
 <?php include('skipif.inc'); ?>
 --FILE--
 <?php
-py_eval("print 'From Python: Hello PHP World'");
+$result = python_eval("print 'From Python: Hello PHP World'");
+echo $result;
 --EXPECT--
 From Python: Hello PHP World
+1
