@@ -1,65 +1,84 @@
-<?xml version="1.0" encoding="ISO-8859-1" ?>
-<package>
-  <name>python</name>
-  <summary>Embedded Python</summary>
-  <description>
-This extension allows the Python interpreter to be embedded inside of PHP, allowing for the instantiate and manipulation of Python objects from within PHP.
-  </description>
-  <status>beta</status>
-  <maintainers>
-    <maintainer>
-      <user>jon</user>
-      <name>Jon Parise</name>
-      <email>jon@php.net</email>
-      <role>lead</role>
-    </maintainer>
-  </maintainers>
-  <license>PHP</license>
+<?xml version="1.0" encoding="UTF-8"?>
+<package packagerversion="1.6.0" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
+    http://pear.php.net/dtd/tasks-1.0.xsd
+    http://pear.php.net/dtd/package-2.0
+    http://pear.php.net/dtd/package-2.0.xsd">
+ <name>python</name>
+ <channel>pear.php.net</channel>
+ <summary>Embedded Python</summary>
+ <description>This extension allows the Python interpreter to be embedded inside of PHP, allowing for the instantiate and manipulation of Python objects from within PHP.</description>
+ <lead>
+  <name>Jon Parise</name>
+  <user>jon</user>
+  <email>jon@php.net</email>
+  <active>yes</active>
+ </lead>
+ <date>2007-06-20</date>
+ <time>23:24:20</time>
+ <version>
+  <release>0.8.0</release>
+  <api>0.5.0</api>
+ </version>
+ <stability>
+  <release>alpha</release>
+  <api>alpha</api>
+ </stability>
+ <license>BSD License</license>
+ <notes>Reawakened</notes>
+ <contents>
+  <dir baseinstalldir="/" name="/">
+   <dir name="docs">
+    <file name="TODO" role="doc" />
+   </dir> <!-- /docs -->
+   <dir name="tests">
+    <file name="001.phpt" role="test" />
+    <file name="002.phpt" role="test" />
+    <file name="003.phpt" role="test" />
+    <file name="004.phpt" role="test" />
+    <file name="005.phpt" role="test" />
+    <file name="006.phpt" role="test" />
+    <file name="007.phpt" role="test" />
+    <file name="skipif.inc" role="test" />
+    <file name="TestModule.py" role="test" />
+   </dir> <!-- /tests -->
+   <file name="config.m4" role="src" />
+   <file name="config.w32" role="src" />
+   <file name="CREDITS" role="doc" />
+   <file name="EXPERIMENTAL" role="doc" />
+   <file name="Makefile.in" role="data" />
+   <file name="php_python.h" role="src" />
+   <file name="php_python_internal.h" role="src" />
+   <file name="python.c" role="src" />
+   <file name="python_convert.c" role="src" />
+   <file name="python_handlers.c" role="src" />
+   <file name="python_object.c" role="src" />
+  </dir> <!-- / -->
+ </contents>
+ <dependencies>
+  <required>
+   <php>
+    <min>5.0.0</min>
+   </php>
+   <pearinstaller>
+    <min>1.4.3</min>
+   </pearinstaller>
+  </required>
+ </dependencies>
+ <providesextension>python</providesextension>
+ <extsrcrelease />
+ <changelog>
   <release>
-    <version>0.7.0</version>
-    <date>2003-01-12</date>
-    <state>alpha</state>
-    <notes>
-- Python functions now accept a variable list of arguments.  The array() method of passing arguments no longer works.
-- Python object handles are now stored internally as Zend resources.
-    </notes>
-    <configureoptions>
-      <configureoption name="with-python" default="autodetect" prompt="Python installation directory?"/>
-    </configureoptions>
+   <version>
+    <release>0.8.0</release>
+    <api>0.5.0</api>
+   </version>
+   <stability>
+    <release>alpha</release>
+    <api>alpha</api>
+   </stability>
+   <date>2007-06-20</date>
+   <license>BSD License</license>
+   <notes>Reawakened</notes>
   </release>
-  <filelist>
-    <file role="doc">CREDITS</file>
-    <file role="doc">EXPERIMENTAL</file>
-    <file role="src">Makefile.in</file>
-    <file role="src">config.m4</file>
-    <file role="src">python.c</file>
-    <file role="src">python_convert.c</file>
-    <file role="src">python_handlers.c</file>
-    <file role="src">python_object.c</file>
-    <file role="src">python.dsp</file>
-    <file role="test">tests/001.phpt</file>
-    <file role="test">tests/002.phpt</file>
-    <file role="test">tests/003.phpt</file>
-    <file role="test">tests/005.phpt</file>
-    <file role="test">tests/006.phpt</file>
-    <file role="test">tests/007.phpt</file>
-  </filelist>
-  <changelog>
-    <release>
-      <version>0.6.0</version>
-      <date>2002-11-05</date>
-      <state>alpha</state>
-      <notes>
-Updated alpha release that includes a number of improvements over the existing alpha preview.  PEAR (PECL) support is now working, too.
-      </notes>
-    </release>
-    <release>
-      <version>0.5.0</version>
-      <date>2002-07-28</date>
-      <state>alpha</state>
-      <notes>
-- Initial PECL release
-      </notes>
-    </release>
-  </changelog>
+ </changelog>
 </package>
