@@ -273,7 +273,7 @@ PHP_FUNCTION(python_construct)
 	/* XXX: Should we be returning success or failure here? */
 }
 /* }}} */
-/* {{{ proto object python_eval(string expr)
+/* {{{ proto mixed python_eval(string expr)
    Evaluate a string of code by passing it to the Python interpreter. */
 PHP_FUNCTION(python_eval)
 {
@@ -287,8 +287,9 @@ PHP_FUNCTION(python_eval)
 	}
 
 	/*
-	 * The expression will be evaluated in __main__'s context (for both
-	 * globals and locals).
+	 * The command will be evaluated in __main__'s context (for both
+	 * globals and locals).  If __main__ doesn't already exist, it will be
+	 * created.
 	 */
 	m = PyImport_AddModule("__main__");
 	if (m == NULL) {
@@ -303,7 +304,7 @@ PHP_FUNCTION(python_eval)
 	 */
 	v = PyRun_String(expr, Py_eval_input, d, d);
 	if (v == NULL) {
-		python_error(E_ERROR);
+		python_error(E_WARNING);
 		RETURN_NULL();
 	}
 
@@ -328,10 +329,11 @@ PHP_FUNCTION(python_eval)
 	ZVAL_ZVAL(return_value, result, 1, 1);
 }
 /* }}} */
-/* {{{ proto bool python_exec(string expr)
+/* {{{ proto bool python_exec(string command)
    Execute a string of code by passing it to the Python interpreter. */
 PHP_FUNCTION(python_exec)
 {
+	PyObject *m, *d, *v;
 	char *command;
 	int len;
 
@@ -340,14 +342,28 @@ PHP_FUNCTION(python_exec)
 	}
 
 	/*
-	 * Execute the given string of Python source code from in the __main__
-	 * module.  If __main__ doesn't already exist, it will be created.  If
-	 * an exception occurs during execution, -1 is returned, but there is no
-	 * way to get the exception information, so we just return failure.
+	 * The command will be evaluated in __main__'s context (for both
+	 * globals and locals).  If __main__ doesn't already exist, it will be
+	 * created.
 	 */
-	if (PyRun_SimpleString(command) == -1) {
+	m = PyImport_AddModule("__main__");
+	if (m == NULL) {
+		RETURN_NULL();
+	}
+	d = PyModule_GetDict(m);
+
+	/*
+	 * The string is executed as a sequence of statements.  This means that
+	 * can only detect the overall success or failure of the execution.  We
+	 * cannot return any other kind of result value.
+	 */
+	v = PyRun_String(command, Py_file_input, d, d);
+	if (v == NULL) {
+		python_error(E_WARNING);
 		RETURN_FALSE;
 	}
+
+	Py_XDECREF(v);
 
 	RETURN_TRUE;
 }
