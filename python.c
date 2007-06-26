@@ -48,6 +48,7 @@ function_entry python_functions[] = {
 	PHP_FE(py_import,		NULL)
 #endif
 	PHP_FE(python_eval,			NULL)
+	PHP_FE(python_exec,			NULL)
 	PHP_FE(python_call,			NULL)
 	{NULL, NULL, NULL}
 };
@@ -117,10 +118,17 @@ PHP_MINIT_FUNCTION(python)
 	python_class_entry.constructor = (zend_function *)&php_python_constructor_function;
 	zend_register_internal_class(&python_class_entry TSRMLS_CC);
 
-	/* Initialize the Python interpreter */
+	/*
+	 * Initialize the embedded Python interpreter.  Note that we skip signal
+	 * handler registration to avoid interfering with PHP's handlers.
+	 */
 	Py_IgnoreEnvironmentFlag = 0;
-	Py_Initialize();
+	Py_InitializeEx(0);
 
+	/*
+	 * At this point, the embedded Python interpreter should be initialized
+	 * and ready to go.  If it isn't, we're in bad shape and return failure.
+	 */
 	return Py_IsInitialized() ? SUCCESS : FAILURE;
 }
 /* }}} */
@@ -130,7 +138,11 @@ PHP_MSHUTDOWN_FUNCTION(python)
 {
 	UNREGISTER_INI_ENTRIES();
 
-	/* Shut down the Python interpretter. */
+	/*
+	 * Shut down the embedded Python interpreter.  This will destroy all of
+	 * the sub-interpreters and (ideally) free all of the memory allocated
+	 * by Python.
+	 */
 	Py_Finalize();
 
 	return SUCCESS;
@@ -261,9 +273,64 @@ PHP_FUNCTION(python_construct)
 	/* XXX: Should we be returning success or failure here? */
 }
 /* }}} */
-/* {{{ proto bool python_eval(string code)
-   Evaluate the given string of code by passing it to the Python interpreter. */
+/* {{{ proto object python_eval(string expr)
+   Evaluate a string of code by passing it to the Python interpreter. */
 PHP_FUNCTION(python_eval)
+{
+	PyObject *m, *d, *v;
+	zval *result;
+	char *expr;
+	int len;
+
+	if (zend_parse_parameters(1 TSRMLS_CC, "s", &expr, &len) == FAILURE) {
+		return;
+	}
+
+	/*
+	 * The expression will be evaluated in __main__'s context (for both
+	 * globals and locals).
+	 */
+	m = PyImport_AddModule("__main__");
+	if (m == NULL) {
+		RETURN_NULL();
+	}
+	d = PyModule_GetDict(m);
+
+	/*
+	 * The string is evaluated as a single, isolated expression.  It is not
+	 * treated as a statement or as series of statements.  This allows us to
+	 * retrieve the resulting value of the evaluated expression.
+	 */
+	v = PyRun_String(expr, Py_eval_input, d, d);
+	if (v == NULL) {
+		python_error(E_ERROR);
+		RETURN_NULL();
+	}
+
+	/*
+	 * We convert the PyObject* value to a zval* so that we can return the
+	 * result to PHP.  If the conversion fails, we'll still be left with a
+	 * valid zval* equal to PHP's NULL.
+	 *
+	 * At this point, we're done with our PyObject* value, as well.  We can
+	 * safely release our reference to it now.
+	 */
+	result = pip_pyobject_to_zval(v);
+	Py_XDECREF(v);
+
+	/*
+	 * Lastly, we copy our result into return_value.  This is literally a
+	 * copy into return_value followed by a destruction of result.
+	 *
+	 * TODO: Consider whether or not we could have assigned directly to
+	 * return_value above instead of going through the intermediary zval*.
+	 */
+	ZVAL_ZVAL(return_value, result, 1, 1);
+}
+/* }}} */
+/* {{{ proto bool python_exec(string expr)
+   Execute a string of code by passing it to the Python interpreter. */
+PHP_FUNCTION(python_exec)
 {
 	char *command;
 	int len;
@@ -273,10 +340,10 @@ PHP_FUNCTION(python_eval)
 	}
 
 	/*
-	 * Execute the string of Python source code from 'command' in the __main__
-	 * module.  If __main__ doesn't already exist, it will be created.  If an
-	 * exception occurs during execution, -1 is returned, but there is no way
-	 * to get the exception information.
+	 * Execute the given string of Python source code from in the __main__
+	 * module.  If __main__ doesn't already exist, it will be created.  If
+	 * an exception occurs during execution, -1 is returned, but there is no
+	 * way to get the exception information, so we just return failure.
 	 */
 	if (PyRun_SimpleString(command) == -1) {
 		RETURN_FALSE;

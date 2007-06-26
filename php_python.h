@@ -54,6 +54,7 @@ PHP_FUNCTION(py_import);
 #endif
 PHP_FUNCTION(python_construct);
 PHP_FUNCTION(python_eval);
+PHP_FUNCTION(python_exec);
 PHP_FUNCTION(python_call);
 
 ZEND_BEGIN_MODULE_GLOBALS(python)
