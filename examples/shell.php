@@ -5,5 +5,5 @@ $stdin = fopen('php://stdin', 'r');
 while (!feof($stdin)) {
     echo ">>> ";
     $line = rtrim(fgets($stdin));
-    python_eval($line);
+    python_exec($line);
 }

@@ -25,6 +25,7 @@ $result = $package->setOptions(array(
     'ignore'            => array('package.php', 'package.xml'),
     'dir_roles'         => array(
          'docs'                 => 'doc',
+         'examples'             => 'doc',
          'tests'                => 'test',
     ),
     'exceptions'        => array(
