@@ -84,7 +84,7 @@ static void
 python_write_property(zval *object, zval *member, zval *value TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
-	PyObject *val = pip_zval_to_pyobject(&value TSRMLS_CC);
+	PyObject *val = pip_zval_to_pyobject(value TSRMLS_CC);
 
 	if (val) {
 		convert_to_string_ex(&member);
@@ -135,7 +135,7 @@ static void
 python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
-	PyObject *val = pip_zval_to_pyobject(&value TSRMLS_CC);
+	PyObject *val = pip_zval_to_pyobject(value TSRMLS_CC);
 
 	/*
 	 * If this offset is a numeric value, we'll start by attempting to use
