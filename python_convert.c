@@ -381,6 +381,16 @@ pip_pyobject_to_zval(PyObject *obj TSRMLS_DC)
 	} else if (PyFloat_Check(obj)) {
 		MAKE_STD_ZVAL(ret);
 		ZVAL_DOUBLE(ret, PyFloat_AsDouble(obj));
+	} else if (PyUnicode_Check(obj)) {
+		PyObject *str = PyUnicode_AsASCIIString(obj);
+		MAKE_STD_ZVAL(ret);
+
+		if (str) {
+			ZVAL_STRINGL(ret, PyString_AsString(str), PyString_Size(str), 1);
+			Py_XDECREF(str);
+		} else {
+			ZVAL_NULL(ret);
+		}
 	} else if (PyString_Check(obj)) {
 		MAKE_STD_ZVAL(ret);
 		ZVAL_STRINGL(ret, PyString_AsString(obj), PyString_Size(obj), 1);
