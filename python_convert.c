@@ -485,17 +485,31 @@ pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC)
 
 /* Object Representations */
 
-/* {{{ pip_str(PyObject *obj, char **buffer, int *length)
-   Returns the NUL-terminated string representation of the Python object. */
+/* {{{ python_str(PyObject *obj, char **buffer, int *length)
+   Returns the NUL-terminated string representation of a Python object. */
 int
-pip_str(PyObject *obj, char **buffer, int *length)
+python_str(PyObject *obj, char **buffer, int *length)
 {
-	PyObject *str = PyObject_Str(obj);
+	PyObject *str;
 	int ret = -1;
 
+	/*
+	 * Compute the string representation of the given object.  This is the
+	 * equivalent of 'str(obj)' or passing the object to 'print'.
+	 */
+ 	str = PyObject_Str(obj);
+
 	if (str) {
+		/* XXX: length is a Py_ssize_t and could overflow an int. */
 		ret = PyString_AsStringAndSize(str, buffer, length);
-		Py_DECREF(str);
+		Py_XDECREF(str);
+
+		/*
+		 * If the conversion raised a TypeError, clear it and just return
+		 * our simple failure code to the caller.
+		 */
+		if (ret == -1 && PyErr_ExceptionMatches(PyExc_TypeError))
+			PyErr_Clear();
 	}
 
 	return ret;
