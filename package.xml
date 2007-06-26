@@ -13,8 +13,8 @@
   <email>jon@php.net</email>
   <active>yes</active>
  </lead>
- <date>2007-06-20</date>
- <time>23:24:20</time>
+ <date>2007-06-25</date>
+ <time>22:06:19</time>
  <version>
   <release>0.8.0</release>
   <api>0.5.0</api>
@@ -30,14 +30,16 @@
    <dir name="docs">
     <file name="TODO" role="doc" />
    </dir> <!-- /docs -->
+   <dir name="examples">
+    <file name="shell.php" role="doc" />
+   </dir> <!-- /examples -->
    <dir name="tests">
-    <file name="001.phpt" role="test" />
-    <file name="002.phpt" role="test" />
-    <file name="003.phpt" role="test" />
     <file name="004.phpt" role="test" />
     <file name="005.phpt" role="test" />
     <file name="006.phpt" role="test" />
     <file name="007.phpt" role="test" />
+    <file name="python_eval.phpt" role="test" />
+    <file name="python_exec.phpt" role="test" />
     <file name="skipif.inc" role="test" />
     <file name="TestModule.py" role="test" />
    </dir> <!-- /tests -->
@@ -76,7 +78,7 @@
     <release>alpha</release>
     <api>alpha</api>
    </stability>
-   <date>2007-06-20</date>
+   <date>2007-06-25</date>
    <license>BSD License</license>
    <notes>Reawakened</notes>
   </release>
