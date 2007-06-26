@@ -4,8 +4,6 @@ Python: python_eval()
 <?php include('skipif.inc'); ?>
 --FILE--
 <?php
-$result = python_eval("print 'From Python: Hello PHP World'");
-echo $result;
+echo python_eval("10 * 10");
 --EXPECT--
-From Python: Hello PHP World
-1
+100
