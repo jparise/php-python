@@ -46,7 +46,7 @@ $package->setPackageType('extsrc');
 $package->setSummary('Embedded Python');
 $package->setDescription($desc);
 $package->setChannel('pear.php.net');
-$package->setLicense('BSD License');
+$package->setLicense('MIT License');
 $package->addMaintainer('lead', 'jon', 'Jon Parise', 'jon@php.net');
 
 $package->addRelease();
