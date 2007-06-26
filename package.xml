@@ -14,7 +14,7 @@
   <active>yes</active>
  </lead>
  <date>2007-06-25</date>
- <time>22:06:19</time>
+ <time>22:35:50</time>
  <version>
   <release>0.8.0</release>
   <api>0.5.0</api>
@@ -23,7 +23,7 @@
   <release>alpha</release>
   <api>alpha</api>
  </stability>
- <license>BSD License</license>
+ <license>MIT License</license>
  <notes>Reawakened</notes>
  <contents>
   <dir baseinstalldir="/" name="/">
@@ -34,10 +34,10 @@
     <file name="shell.php" role="doc" />
    </dir> <!-- /examples -->
    <dir name="tests">
-    <file name="004.phpt" role="test" />
     <file name="005.phpt" role="test" />
     <file name="006.phpt" role="test" />
     <file name="007.phpt" role="test" />
+    <file name="convert_to_php.phpt" role="test" />
     <file name="python_eval.phpt" role="test" />
     <file name="python_exec.phpt" role="test" />
     <file name="skipif.inc" role="test" />
@@ -79,7 +79,7 @@
     <api>alpha</api>
    </stability>
    <date>2007-06-25</date>
-   <license>BSD License</license>
+   <license>MIT License</license>
    <notes>Reawakened</notes>
   </release>
  </changelog>
