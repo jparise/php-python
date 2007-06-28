@@ -5,7 +5,8 @@ Python: Convert Python types to PHP types
 --FILE--
 <?php
 var_dump(python_eval("None"));
-var_dump(python_eval("1"));
+var_dump(python_eval("int(1)"));
+var_dump(python_eval("long(1)"));
 var_dump(python_eval("1.5"));
 
 var_dump(python_eval("'string'"));
@@ -17,6 +18,7 @@ var_dump(python_eval("[1, 2, 3]"));
 var_dump(python_eval("{'one': 1, 'two': 2, 'three': 3}"));
 --EXPECT--
 NULL
+int(1)
 int(1)
 float(1.5)
 string(6) "string"
