@@ -278,7 +278,6 @@ PHP_FUNCTION(python_construct)
 PHP_FUNCTION(python_eval)
 {
 	PyObject *m, *d, *v;
-	zval *result;
 	char *expr;
 	int len;
 
@@ -316,17 +315,10 @@ PHP_FUNCTION(python_eval)
 	 * At this point, we're done with our PyObject* value, as well.  We can
 	 * safely release our reference to it now.
 	 */
-	result = pip_pyobject_to_zval(v);
-	Py_XDECREF(v);
+	if (pip_pyobject_to_zval(v, return_value) == FAILURE)
+		ZVAL_NULL(return_value);
 
-	/*
-	 * Lastly, we copy our result into return_value.  This is literally a
-	 * copy into return_value followed by a destruction of result.
-	 *
-	 * TODO: Consider whether or not we could have assigned directly to
-	 * return_value above instead of going through the intermediary zval*.
-	 */
-	ZVAL_ZVAL(return_value, result, 1, 1);
+	Py_DECREF(v);
 }
 /* }}} */
 /* {{{ proto bool python_exec(string command)
@@ -363,7 +355,7 @@ PHP_FUNCTION(python_exec)
 		RETURN_FALSE;
 	}
 
-	Py_XDECREF(v);
+	Py_DECREF(v);
 
 	RETURN_TRUE;
 }
@@ -404,8 +396,7 @@ PHP_FUNCTION(python_call)
 
 			if (result) {
 				/* Convert the Python result to its PHP equivalent. */
-				*return_value = *pip_pyobject_to_zval(result TSRMLS_CC);
-				zval_copy_ctor(return_value);
+				pip_pyobject_to_zval(result, return_value TSRMLS_CC);
 				Py_DECREF(result);
 			} else {
 				python_error(E_ERROR);
