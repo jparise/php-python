@@ -222,133 +222,188 @@ pip_zval_to_pyobject(zval *val TSRMLS_DC)
 
 /* Python to PHP Conversions */
 
-/* {{{ pip_sequence_to_hash(PyObject *seq, HashTable *ht TSRMLS_DC)
+/* {{{ pip_sequence_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
    Convert a Python sequence to a PHP hash. */
 int
-pip_sequence_to_hash(PyObject *seq, HashTable *ht TSRMLS_DC)
+pip_sequence_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
 {
-	int i;
+	PyObject *item;
+	zval *v;
+	int i, size;
 
 	/* Make sure this object implements the sequence protocol. */
-	if (!PySequence_Check(seq)) {
+	if (!PySequence_Check(o))
 		return FAILURE;
-	}
 
-	for (i = 0; i < PySequence_Size(seq); ++i) {
-		/* Get the item in this slot and convert it to a zval. */
-		PyObject *item = PySequence_GetItem(seq, i);
-		zval *val = pip_pyobject_to_zval(item TSRMLS_CC);
-		Py_XDECREF(item);
+	size = PySequence_Size(o);
+	for (i = 0; i < size; ++i) {
+		/*
+		 * Acquire a reference to the current item in the sequence.  If we
+		 * fail to get the object, we return a hard failure.
+		 */
+		item = PySequence_ITEM(o, i);
+		if (item == NULL)
+			return FAILURE;
 
-		/* Append the zval to our hash. */
-		if (zend_hash_next_index_insert(ht, (void *)&val, sizeof(zval *),
-										NULL) == FAILURE) {
-			php_error(E_ERROR, "Python: Hash insertion failure");
+		/*
+		 * Attempt to convert the item from a Python object to a PHP value.
+		 * This involves allocating a new zval, testing the success of the
+		 * conversion, and potentially cleaning up the zval upon failure.
+		 */
+		MAKE_STD_ZVAL(v);
+		if (pip_pyobject_to_zval(item, v TSRMLS_CC) == FAILURE) {
+			zval_dtor(v);
+			Py_DECREF(item);
+			return FAILURE;
 		}
+		Py_DECREF(item);
+
+		/*
+		 * Append (i.e., insert into the next slot) the PHP value into our
+		 * hashtable.  Failing to insert the value results in a hard
+		 * failure.
+		 */
+		if (zend_hash_next_index_insert(ht, (void *)&v, sizeof(zval *),
+										NULL) == FAILURE)
+			return FAILURE;
 	}
 
 	return SUCCESS;
 }
 /* }}} */
-/* {{{ pip_sequence_to_array(PyObject *seq TSRMLS_DC)
+/* {{{ pip_sequence_to_array(PyObject *o, zval *zv TSRMLS_DC)
    Convert a Python sequence to a PHP array. */
-zval *
-pip_sequence_to_array(PyObject *seq TSRMLS_DC)
+int
+pip_sequence_to_array(PyObject *o, zval *zv TSRMLS_DC)
 {
-	zval *array;
+	/*
+	 * Initialize our zval as an array.  The converted sequence will be
+	 * stored in the array's hashtable.
+	 */
+	if (array_init(zv) == SUCCESS)
+		return pip_sequence_to_hash(o, Z_ARRVAL_P(zv) TSRMLS_CC);
 
-	/* Initialize our PHP array. */
-	MAKE_STD_ZVAL(array);
-	if (array_init(array) != SUCCESS) {
-		return NULL;
-	}
-
-	/* Convert the sequence and place the result in the array's hashtable. */
-	if (pip_sequence_to_hash(seq, Z_ARRVAL_P(array) TSRMLS_CC) != SUCCESS) {
-		return NULL;
-	}
-
-	return array;
+	return FAILURE;
 }
 /* }}} */
-/* {{{ pip_mapping_to_hash(PyObject *map, HashTable *ht TSRMLS_DC)
+/* {{{ pip_mapping_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
    Convert a Python mapping to a PHP hash. */
 int
-pip_mapping_to_hash(PyObject *map, HashTable *ht TSRMLS_DC)
+pip_mapping_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
 {
-	PyObject *keys, *key;
-	char *key_name;
-	int i, key_len;
+	PyObject *keys, *key, *str, *item;
+	zval *v;
+	char *name;
+	int i, size, name_len;
+	int status = FAILURE;
 
-	/* Retrieve the list of keys for this mapping. */
-	if ((keys = PyMapping_Keys(map)) == NULL) {
-		return FAILURE;
-	}
-
-	/* Iterate over the list of keys. */
-	for (i = 0; i < PySequence_Size(keys); ++i) {
-		if (key = PySequence_GetItem(keys, i)) {
-			PyObject *str, *item;
-
-			/* Get the string representation of this key. */
-			str = PyObject_Str(key);
-			PyString_AsStringAndSize(str, &key_name, &key_len);
-			Py_XDECREF(str);
-
-			/* Extract the item for this key. */
-			if (item = PyMapping_GetItemString(map, key_name)) {
-				zval *val = pip_pyobject_to_zval(item TSRMLS_CC);
-
-				/* Add the new item to the hash. */
-				if (zend_hash_update(ht, key_name, key_len + 1,
-									 (void *)&val, sizeof(zval *),
-									 NULL) == FAILURE) {
-					php_error(E_ERROR, "Python: hash update failure");
-				}
-				Py_DECREF(item);
+	/*
+	 * We start by retrieving the list of keys for this mapping.  We will
+	 * use this list below to address each item in the mapping.
+	 */
+	keys = PyMapping_Keys(o);
+	if (keys) {
+		/*
+		 * Iterate over all of the mapping's keys.
+		 */
+		size = PySequence_Size(keys);
+		for (i = 0; i < size; ++i) {
+			/*
+			 * Acquire a reference to the current item in the mapping.  If
+			 * we fail to get the object, we return a hard failure.
+			 */
+			key = PySequence_ITEM(keys, i);
+			if (key == NULL) {
+				status = FAILURE;
+				break;
 			}
+
+			/*
+			 * We request the string representation of this key.  PHP
+			 * hashtables only support string-based keys.
+			 */
+			str = PyObject_Str(key);
+			if (!str || PyString_AsStringAndSize(str, &name, &name_len) == -1) {
+				Py_DECREF(key);
+				status = FAILURE;
+				break;
+			}
+
+			/*
+			 * Extract the item associated with the named key.
+			 */
+			item = PyMapping_GetItemString(o, name);
+			if (item == NULL) {
+				Py_DECREF(str);
+				Py_DECREF(key);
+				status = FAILURE;
+				break;
+			}
+
+			/*
+			 * Attempt to convert the item from a Python object to a PHP
+			 * value.  This involves allocating a new zval.  If the
+			 * conversion fails, we must remember to free the allocated zval
+			 * below.
+			 */
+			MAKE_STD_ZVAL(v);
+			status = pip_pyobject_to_zval(item, v TSRMLS_CC);
+
+			/*
+			 * If we've been successful up to this point, attempt to add the
+			 * new item to our hastable.
+			 */
+			if (status == SUCCESS)
+				status = zend_hash_update(ht, name, name_len + 1,
+										  (void *)&v, sizeof(zval *), NULL);
+
+			/*
+			 * Release our reference to the Python objects that are still
+			 * active in this scope.
+			 */
+			Py_DECREF(item);
+			Py_DECREF(str);
 			Py_DECREF(key);
+
+			/*
+			 * If we've failed to convert and insert this item, free our
+			 * allocated zval and break out of our loop with a failure
+			 * status.
+			 */
+			if (status == FAILURE) {
+				zval_dtor(v);
+				break;
+			}
 		}
+
+		Py_DECREF(keys);
 	}
 
-	Py_DECREF(keys);
-	return SUCCESS;
+	return status;
 }
 /* }}} */
-/* {{{ pip_mapping_to_array(PyObject *map TSRMLS_DC)
+/* {{{ pip_mapping_to_array(PyObject *o, zval *zv TSRMLS_DC)
    Convert a Python mapping to a PHP array. */
-zval *
-pip_mapping_to_array(PyObject *map TSRMLS_DC)
+int
+pip_mapping_to_array(PyObject *o, zval *zv TSRMLS_DC)
 {
-	zval *array;
+	if (array_init(zv) == SUCCESS)
+		return pip_mapping_to_hash(o, Z_ARRVAL_P(zv) TSRMLS_CC);
 
-	/* Initialize our PHP array. */
-	MAKE_STD_ZVAL(array);
-	if (array_init(array) != SUCCESS) {
-		return NULL;
-	}
-
-	/* Convert the sequence and place the result in the array's hashtable. */
-	if (pip_mapping_to_hash(map, Z_ARRVAL_P(array) TSRMLS_CC) != SUCCESS) {
-		return NULL;
-	}
-
-	return array;
+	return FAILURE;
 }
 /* }}} */
-/* {{{ pip_pyobject_to_zobject(PyObject *obj TSRMLS_DC)
+/* {{{ pip_pyobject_to_zobject(PyObject *o, zval *zv TSRMLS_DC)
    Convert Python object to a PHP (Zend) object */
-zval *
-pip_pyobject_to_zobject(PyObject *obj TSRMLS_DC)
+int
+pip_pyobject_to_zobject(PyObject *o, zval *zv TSRMLS_DC)
 {
 	php_python_object *pip;
 	zval *ret;
 
 	/* Create a new instance of a PHP Python object. */
-	MAKE_STD_ZVAL(ret);
-	if (object_init_ex(ret, &python_class_entry) != SUCCESS) {
-		return ret;
-	}
+	if (object_init_ex(zv, &python_class_entry) != SUCCESS)
+		return FAILURE;
 
 	/*
 	 * Fetch the php_python_object data for this object instance. Bump the
@@ -356,59 +411,110 @@ pip_pyobject_to_zobject(PyObject *obj TSRMLS_DC)
 	 * Python object instance.
 	 */
 	pip = (php_python_object *)zend_object_store_get_object(ret TSRMLS_CC);
-	Py_INCREF(obj);
-	pip->object = obj;
+	Py_INCREF(o);
+	pip->object = o;
 
-	return ret;
+	return SUCCESS;
 }
 /* }}} */
-/* {{{ pip_pyobject_to_zval(PyObject *obj TSRMLS_DC)
+/* {{{ pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC)
    Converts the given PyObject into an equivalent zval. */
-zval *
-pip_pyobject_to_zval(PyObject *obj TSRMLS_DC)
+int
+pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC)
 {
-	zval *ret = NULL;
+	/*
+	 * The general approach taken below is to infer the Python object's type
+	 * using a series of tests based on Python's type-specific _Check()
+	 * functions.  If the test passes, then we proceed immediately with the
+	 * fastest possible conversion (which implies using the versions of the
+	 * conversion functions that don't perform any additional error
+	 * checking).
+	 *
+	 * Complex conversions are farmed out to reusable helper functions.
+	 *
+	 * The order of the tests below is largel insignificant, aside from the
+	 * initial test of (o == NULL).  They could be reordered for performance
+	 * purposes in the future once we have a sense of the most commonly
+	 * converted types.
+	 */
 
-	if (obj == NULL || obj == Py_None) {
-		MAKE_STD_ZVAL(ret);
-		ZVAL_NULL(ret);
-	} else if (PyInt_Check(obj)) {
-		MAKE_STD_ZVAL(ret);
-		ZVAL_LONG(ret, PyInt_AsLong(obj));
-	} else if (PyLong_Check(obj)) {
-		MAKE_STD_ZVAL(ret);
-		ZVAL_LONG(ret, PyLong_AsLong(obj));
-	} else if (PyFloat_Check(obj)) {
-		MAKE_STD_ZVAL(ret);
-		ZVAL_DOUBLE(ret, PyFloat_AsDouble(obj));
-	} else if (PyUnicode_Check(obj)) {
-		PyObject *str = PyUnicode_AsASCIIString(obj);
-		MAKE_STD_ZVAL(ret);
+	/*
+	 * If our object is invalid or None, treat it like PHP's NULL value.
+	 */
+	if (o == NULL || o == Py_None) {
+		ZVAL_NULL(zv);
+		return SUCCESS;
+	}
 
-		if (str) {
-			ZVAL_STRINGL(ret, PyString_AsString(str), PyString_Size(str), 1);
-			Py_XDECREF(str);
-		} else {
-			ZVAL_NULL(ret);
+	/*
+	 * Python integers and longs (and their subclasses) are treated as PHP
+	 * longs.  We don't perform any kind of fancy type casting here; if the
+	 * original object isn't already an integer type, we don't attempt to
+	 * treat it like one.
+	 */
+	if (PyInt_Check(o)) {
+		ZVAL_LONG(zv, PyInt_AS_LONG(o));
+		return SUCCESS;
+	}
+	if (PyLong_Check(o)) {
+		ZVAL_LONG(zv, PyLong_AsLong(o));
+		return SUCCESS;
+	}
+
+	/*
+	 * Python floating point objects are treated as PHP doubles.
+	 */
+	if (PyFloat_Check(o)) {
+		ZVAL_DOUBLE(zv, PyFloat_AS_DOUBLE(o));
+		return SUCCESS;
+	}
+
+	/*
+	 * Python strings are converted directly to PHP strings.  The contents
+	 * of the string is copied (i.e., duplicated) into the zval.
+	 */
+	if (PyString_Check(o)) {
+		ZVAL_STRINGL(zv, PyString_AS_STRING(o), PyString_GET_SIZE(o), 1);
+		return SUCCESS;
+	}
+
+	/*
+	 * Python Unicode strings are converted to ASCII and stored as PHP
+	 * strings.  It is possible for this encoding-based conversion to fail.
+	 * The contents of the ASCII-encoded string as copied (i.e., duplicated)
+	 * into the zval.
+	 *
+	 * TODO:
+	 * - Support richer conversions if PHP's Unicode support is available.
+	 * - Potentially break this conversion out into its own routine.
+	 */
+	if (PyUnicode_Check(o)) {
+		PyObject *s = PyUnicode_AsASCIIString(o);
+		if (s) {
+			ZVAL_STRINGL(zv, PyString_AS_STRING(s), PyString_GET_SIZE(s), 1);
+			Py_DECREF(s);
+			return SUCCESS;
 		}
-	} else if (PyString_Check(obj)) {
-		MAKE_STD_ZVAL(ret);
-		ZVAL_STRINGL(ret, PyString_AsString(obj), PyString_Size(obj), 1);
-	} else if (PySequence_Check(obj)) {
-		ret = pip_sequence_to_array(obj TSRMLS_CC);
-	} else if (PyMapping_Check(obj)) {
-		ret = pip_mapping_to_array(obj TSRMLS_CC);
-	} else {
-		ret = pip_pyobject_to_zobject(obj TSRMLS_CC);
+
+		return FAILURE;
 	}
 
-	/* If we still don't have a valid value, return (PHP's) NULL. */
-	if (ret == NULL) {
-		MAKE_STD_ZVAL(ret);
-		ZVAL_NULL(ret);
-	}
+	/*
+	 * Python objects that follow the sequence or mapping protocols are
+	 * converted to PHP arrays.  Remember that PHP arrays are essentially
+	 * hashtables that can be treated as simple array-like containers.
+	 */
+	if (PySequence_Check(o))
+		return pip_sequence_to_array(o, zv TSRMLS_CC);
 
-	return ret;
+	if (PyMapping_Check(o))
+		return pip_mapping_to_array(o, zv TSRMLS_CC);
+
+	/*
+	 * If all of the other conversions failed, we attempt to convert the
+	 * Python object to a PHP object.
+	 */
+	return pip_pyobject_to_zobject(o, zv TSRMLS_CC);
 }
 /* }}} */
 
@@ -419,65 +525,39 @@ pip_pyobject_to_zval(PyObject *obj TSRMLS_DC)
 PyObject *
 pip_args_to_tuple(int argc, int start TSRMLS_DC)
 {
-	PyObject *args = NULL;
+	PyObject *arg, *args = NULL;
 	zval ***zargs;
+	int i;
 
-	if (argc < start) {
+	if (argc < start)
 		return NULL;
-	}
 
-	/* Allocate enough memory for all of the arguments. */
-	if ((zargs = (zval ***) emalloc(sizeof(zval **) * argc)) == NULL) {
-		return NULL;
-	}
-
-	/* Get the array of PHP parameters. */
-	if (zend_get_parameters_array_ex(argc, zargs) == SUCCESS) {
-		int i = 0;
-
-		args = PyTuple_New(argc - start);
-		for (i = start; i < argc; i++) {
-			PyObject *arg = pip_zval_to_pyobject(*zargs[i] TSRMLS_CC);
-			PyTuple_SetItem(args, i - start, arg);
+	/*
+	 * In order to convert our current arguments to a Python tuple object,
+	 * we need to make a temporary copy of the argument array.  We use this
+	 * array copy to create and populate a new tuple object containing the
+	 * individual arguments.
+	 *
+	 * An alternative to the code below is zend_copy_parameters_array().
+	 * That function populates a PHP array instance with the parameters.  It
+	 * seems like the code below is probably going to be more efficient
+	 * because it pre-allocates all of the memory for the array up front,
+	 * but it would be worth testing the two approaches to know for sure.
+	 */
+	zargs = (zval ***) emalloc(sizeof(zval **) * argc);
+	if (zargs) {
+		if (zend_get_parameters_array_ex(argc, zargs) == SUCCESS) {
+			args = PyTuple_New(argc - start);
+			if (args) {
+				for (i = start; i < argc; ++i) {
+					arg = pip_zval_to_pyobject(*zargs[i] TSRMLS_CC);
+					PyTuple_SetItem(args, i - start, arg);
+				}
+			}
 		}
+
+		efree(zargs);
 	}
-
-	/* We're done with the PHP parameter array.  Free it. */
-	efree(zargs);
-
-	return args;
-}
-/* }}} */
-/* {{{ pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC)
-   Converts PHP arguments into a Python tuple suitable for argument passing */
-PyObject *
-pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC)
-{
-	PyObject *args = NULL;
-	zval **zargs;
-
-	if (argc < start) {
-		return NULL;
-	}
-
-	/* Allocate enough memory for all of the arguments. */
-	if ((zargs = (zval **) emalloc(sizeof(zval *) * argc)) == NULL) {
-		return NULL;
-	}
-
-	/* Get the array of PHP parameters. */
-	if (zend_get_parameters_array(ht, argc, zargs) == SUCCESS) {
-		int i = 0;
-
-		args = PyTuple_New(argc - start);
-		for (i = start; i < argc; i++) {
-			PyObject *arg = pip_zval_to_pyobject(zargs[i] TSRMLS_CC);
-			PyTuple_SetItem(args, i - start, arg);
-		}
-	}
-
-	/* We're done with the PHP parameter array.  Free it. */
-	efree(zargs);
 
 	return args;
 }
@@ -485,10 +565,10 @@ pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC)
 
 /* Object Representations */
 
-/* {{{ python_str(PyObject *obj, char **buffer, int *length)
+/* {{{ python_str(PyObject *o, char **buffer, int *length)
    Returns the NUL-terminated string representation of a Python object. */
 int
-python_str(PyObject *obj, char **buffer, int *length)
+python_str(PyObject *o, char **buffer, int *length)
 {
 	PyObject *str;
 	int ret = -1;
@@ -497,12 +577,12 @@ python_str(PyObject *obj, char **buffer, int *length)
 	 * Compute the string representation of the given object.  This is the
 	 * equivalent of 'str(obj)' or passing the object to 'print'.
 	 */
- 	str = PyObject_Str(obj);
+ 	str = PyObject_Str(o);
 
 	if (str) {
 		/* XXX: length is a Py_ssize_t and could overflow an int. */
 		ret = PyString_AsStringAndSize(str, buffer, length);
-		Py_XDECREF(str);
+		Py_DECREF(str);
 
 		/*
 		 * If the conversion raised a TypeError, clear it and just return

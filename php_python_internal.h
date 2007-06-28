@@ -58,18 +58,17 @@ PyObject * pip_zobject_to_pyobject(zval *obj TSRMLS_DC);
 PyObject * pip_zval_to_pyobject(zval *val TSRMLS_DC);
 
 /* Python to PHP Conversion */
-int    pip_sequence_to_hash(PyObject *seq, HashTable *ht TSRMLS_DC);
-zval * pip_sequence_to_array(PyObject *seq TSRMLS_DC);
-int    pip_mapping_to_hash(PyObject *map, HashTable *ht TSRMLS_DC);
-zval * pip_mapping_to_array(PyObject *map TSRMLS_DC);
-zval * pip_pyobject_to_zobject(PyObject *obj TSRMLS_DC);
-zval * pip_pyobject_to_zval(PyObject *obj TSRMLS_DC);
+int pip_sequence_to_hash(PyObject *o, HashTable *ht TSRMLS_DC);
+int pip_sequence_to_array(PyObject *o, zval *zv TSRMLS_DC);
+int pip_mapping_to_hash(PyObject *o, HashTable *ht TSRMLS_DC);
+int pip_mapping_to_array(PyObject *o, zval *zv TSRMLS_DC);
+int pip_pyobject_to_zobject(PyObject *o, zval *zv TSRMLS_DC);
+int pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC);
 
 /* Argument Conversion */
 PyObject * pip_args_to_tuple(int argc, int start TSRMLS_DC);
-PyObject * pip_args_to_tuple_ex(int ht, int argc, int start TSRMLS_DC);
 
 /* Object Representations */
-int pip_str(PyObject *obj, char **buffer, int *length);
+int python_str(PyObject *o, char **buffer, int *length);
 
 #endif /* PHP_PYTHON_INTERNAL_H */
