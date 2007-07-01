@@ -42,13 +42,12 @@ efree_function(zend_internal_function *func)
 	efree(func->function_name);
 
 	/* Free the argument information. */
-	for (i = 0; i < func->num_args; i++) {
-		if (func->arg_info[i].name) {
+	for (i = 0; i < func->num_args; ++i) {
+		if (func->arg_info[i].name)
 			efree(func->arg_info[i].name);
-		}
-		if (func->arg_info[i].class_name) {
+
+		if (func->arg_info[i].class_name)
 			efree(func->arg_info[i].class_name);
-		}
 	}
 	efree(func->arg_info);
 
@@ -69,7 +68,8 @@ python_read_property(zval *object, zval *member, int type TSRMLS_DC)
 	convert_to_string_ex(&member);
 
 	if (attr = PyObject_GetAttrString(pip->object, Z_STRVAL_P(member))) {
-		return_value = pip_pyobject_to_zval(attr TSRMLS_CC);
+		MAKE_STD_ZVAL(return_value);
+		pip_pyobject_to_zval(attr, return_value TSRMLS_CC);
 		Py_DECREF(attr);
 	}
 
@@ -84,11 +84,13 @@ static void
 python_write_property(zval *object, zval *member, zval *value TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
-	PyObject *val = pip_zval_to_pyobject(value TSRMLS_CC);
-
+	PyObject *val;
+	
+	val = pip_zval_to_pyobject(value TSRMLS_CC);
 	if (val) {
 		convert_to_string_ex(&member);
-		PyObject_SetAttrString(pip->object, Z_STRVAL_P(member), val);
+		if (PyObject_SetAttrString(pip->object, Z_STRVAL_P(member), val) == -1)
+			php_error(E_ERROR, "Failed to set attribute %s", Z_STRVAL_P(member));
 	}
 }
 /* }}} */
@@ -120,7 +122,8 @@ python_read_dimension(zval *object, zval *offset, int type TSRMLS_DC)
 
 	/* If we successfully fetched an item, return its PHP representation. */
 	if (item) {
-		return_value = pip_pyobject_to_zval(item TSRMLS_CC);
+		MAKE_STD_ZVAL(return_value);
+		pip_pyobject_to_zval(item, return_value TSRMLS_CC);
 		Py_DECREF(item);
 	}
 
@@ -283,9 +286,8 @@ python_get_properties(zval *object TSRMLS_DC)
 
 	/* Initialize the hashtable which will hold the list of properties. */
 	ALLOC_HASHTABLE(ht);
-	if (zend_hash_init(ht, 0, NULL, ZVAL_PTR_DTOR, 0) != SUCCESS) {
+	if (zend_hash_init(ht, 0, NULL, ZVAL_PTR_DTOR, 0) != SUCCESS)
 		return NULL;
-	}
 
 	/*
 	 * Fetch the dictionary containing all of this object's attributes
@@ -368,15 +370,8 @@ python_call_method(char *method_name, INTERNAL_FUNCTION_PARAMETERS)
 		Py_XDECREF(args);
 
 		if (result) {
-			/* Convert the Python result value to its PHP equivalent. */
-			zval *retval = pip_pyobject_to_zval(result TSRMLS_CC);
+			ret = pip_pyobject_to_zval(result, return_value TSRMLS_CC);
 			Py_DECREF(result);
-
-			/* If we have a return value, set it and signal success. */
-			if (retval) {
-				RETVAL_ZVAL(retval, 1, 0);
-				ret = SUCCESS;
-			}
 		}
 	}
 
@@ -462,6 +457,7 @@ python_cast(zval *readobj, zval *writeobj, int type TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, readobj);
 	PyObject *val = NULL;
+	int ret = FAILURE;
 
 	switch (type) {
 		case IS_STRING:
@@ -472,11 +468,11 @@ python_cast(zval *readobj, zval *writeobj, int type TSRMLS_DC)
 	}
 
 	if (val) {
-		writeobj = pip_pyobject_to_zval(val TSRMLS_CC);
+		ret = pip_pyobject_to_zval(val, writeobj TSRMLS_CC);
 		Py_DECREF(val);
 	}
 
-	return SUCCESS;
+	return ret;
 }
 /* }}} */
 /* {{{ python_count_elements(zval *object, long *count TSRMLS_DC)

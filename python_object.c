@@ -85,16 +85,16 @@ python_object_clone(void *object, void **clone_ptr TSRMLS_DC)
 zend_object_value
 python_object_create(zend_class_entry *ce TSRMLS_DC)
 {
-	php_python_object *obj;
+	php_python_object *pip;
 	zend_object_value retval;
 
 	/* Allocate and initialize the PHP Python object structure. */
-	obj = emalloc(sizeof(php_python_object));
-	obj->object = NULL;
-	obj->ce = ce;
+	pip = emalloc(sizeof(php_python_object));
+	pip->object = NULL;
+	pip->ce = ce;
 
 	/* Add this instance to the objects store using the Zend Objects API. */
-	retval.handle = zend_objects_store_put(obj,
+	retval.handle = zend_objects_store_put(pip,
 										   python_object_destroy,
 										   python_object_free,
 										   python_object_clone TSRMLS_CC);
