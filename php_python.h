@@ -46,12 +46,6 @@ PHP_RINIT_FUNCTION(python);
 PHP_RSHUTDOWN_FUNCTION(python);
 PHP_MINFO_FUNCTION(python);
 
-#if 0
-PHP_FUNCTION(py_path);
-PHP_FUNCTION(py_path_prepend);
-PHP_FUNCTION(py_path_append);
-PHP_FUNCTION(py_import);
-#endif
 PHP_FUNCTION(python_construct);
 PHP_FUNCTION(python_eval);
 PHP_FUNCTION(python_exec);
