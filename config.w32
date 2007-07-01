@@ -8,7 +8,7 @@ if (PHP_PYTHON != "no") {
 		PHP_PYTHON = WshShell.Environment("Process").Item("PYTHONHOME");
 	}
 
-	var libname = PHP_DEBUG == "yes" ? "python24_d.lib" : "python24.lib";
+	var libname = PHP_DEBUG == "yes" ? "python25_d.lib" : "python25.lib";
 
 	if (CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON",
 								 PHP_PYTHON + "\\include") &&
