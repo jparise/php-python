@@ -74,12 +74,11 @@ zend_internal_function php_python_constructor_function = {
 	&python_class_entry,		/* scope */
 	0,							/* fn_flags */
 	NULL,						/* prototype */
-	2,							/* num_args */
+	0,							/* num_args */
 	2,							/* required_num_args */
 	NULL,						/* arg_info */
 	0,							/* pass_rest_by_reference */
 	0,							/* return_reference */
-	NULL,						/* u_twin */
 	ZEND_FN(python_construct),	/* handler */
 	NULL						/* module */
 };
@@ -255,16 +254,21 @@ PHP_FUNCTION(python_construct)
 			 * we have a tuple of arguments, remember to free (decref) it.
 			 */
 			pip->object = PyObject_CallObject(class, args);
-			if (args) {
+			if (args)
 				Py_DECREF(args);
-			}
+
+			if (pip->object == NULL)
+				python_error(E_ERROR);
 
 			/* Our new object should be an instance of the requested class. */
 			assert(PyObject_IsInstance(pip->object, class));
-		}
-	}
+		} else
+			php_error(E_ERROR, "Python: '%s.%s' is not a callable object",
+					  module_name, class_name);
 
-	/* XXX: Should we be returning success or failure here? */
+		Py_DECREF(module);
+	} else
+		php_error(E_ERROR, "Python: '%s' is not a valid module", module_name);
 }
 /* }}} */
 /* {{{ proto mixed python_eval(string expr)
