@@ -41,12 +41,6 @@ zend_class_entry python_class_entry;
 /* {{{ python_functions[]
  */
 function_entry python_functions[] = {
-#if 0
-	PHP_FE(py_path,			NULL)
-	PHP_FE(py_path_prepend,	NULL)
-	PHP_FE(py_path_append,	NULL)
-	PHP_FE(py_import,		NULL)
-#endif
 	PHP_FE(python_eval,			NULL)
 	PHP_FE(python_exec,			NULL)
 	PHP_FE(python_call,			NULL)
@@ -388,11 +382,12 @@ PHP_FUNCTION(python_call)
 			/*
 			 * Call the function with a tuple of arguments.  We skip the first
 			 * two arguments to python_call (the module name and function name)
-			 * use pack the remaining values into the 'args' tuple.
+			 * and pack the remaining values into the 'args' tuple.
 			 */
 			args = pip_args_to_tuple(ZEND_NUM_ARGS(), 2 TSRMLS_CC);
 			result = PyObject_CallObject(function, args);
-			if (args) Py_DECREF(args);
+			if (args)
+				Py_DECREF(args);
 
 			if (result) {
 				/* Convert the Python result to its PHP equivalent. */
