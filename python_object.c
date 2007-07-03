@@ -133,9 +133,8 @@ python_get_arg_info(PyObject *callable, zend_arg_info **arg_info)
 	zend_uint num_args = 0;
 
 	/* Make sure that we've been passed a valid, callable object. */
-	if (!callable || PyCallable_Check(callable) == 0) {
+	if (!callable || PyCallable_Check(callable) == 0)
 		return 0;
-	}
 
 	/*
 	 * The arguments are described by the object's func_code.co_varnames
@@ -144,13 +143,13 @@ python_get_arg_info(PyObject *callable, zend_arg_info **arg_info)
 	if (func_code = PyObject_GetAttrString(callable, "func_code")) {
 		if (co_varnames = PyObject_GetAttrString(func_code, "co_varnames")) {
 			PyObject *arg;
-			int start = 0, i;
+			int i, num_vars, start = 0;
 
 			/*
 			 * Get the number of arguments defined by the co_varnames tuple
 			 * and use that value to resize the arg_info array.
 			 */
-			num_args = PyTuple_Size(co_varnames);
+			num_vars = num_args = PyTuple_Size(co_varnames);
 
 			/* If this is a method, skip the explicit "self" argument. */
 			if (PyMethod_Check(callable)) {
@@ -162,17 +161,17 @@ python_get_arg_info(PyObject *callable, zend_arg_info **arg_info)
 			*arg_info = ecalloc(num_args, sizeof(zend_arg_info));
 
 			/* Describe each of this method's arguments. */
-			for (i = start; i < PyTuple_Size(co_varnames); i++) {
+			for (i = start; i < num_vars; ++i) {
 				arg = PyTuple_GetItem(co_varnames, i);
 
 				/* Fill out the zend_arg_info structure for this argument. */
 				if (arg && PyString_Check(arg)) {
-					arg_info[i - start]->name = estrdup(PyString_AsString(arg));
-					arg_info[i - start]->name_len = PyString_Size(arg);
-					arg_info[i - start]->class_name = '\0';
-					arg_info[i - start]->class_name_len = 0;
-					arg_info[i - start]->allow_null = 1;
-					arg_info[i - start]->pass_by_reference = 0;
+					arg_info[i-start]->name = estrdup(PyString_AS_STRING(arg));
+					arg_info[i-start]->name_len = PyString_GET_SIZE(arg);
+					arg_info[i-start]->class_name = '\0';
+					arg_info[i-start]->class_name_len = 0;
+					arg_info[i-start]->allow_null = 1;
+					arg_info[i-start]->pass_by_reference = 0;
 				}
 			}
 
