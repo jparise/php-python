@@ -90,7 +90,8 @@ python_write_property(zval *object, zval *member, zval *value TSRMLS_DC)
 	if (val) {
 		convert_to_string_ex(&member);
 		if (PyObject_SetAttrString(pip->object, Z_STRVAL_P(member), val) == -1)
-			php_error(E_ERROR, "Failed to set attribute %s", Z_STRVAL_P(member));
+			php_error(E_ERROR, "Python: Failed to set attribute %s",
+					  Z_STRVAL_P(member));
 	}
 }
 /* }}} */
@@ -107,9 +108,8 @@ python_read_dimension(zval *object, zval *offset, int type TSRMLS_DC)
 	 * If we've been given a numeric value, start by attempting to use the
 	 * sequence protocol.  The value may be a valid index.
 	 */
-	if (Z_TYPE_P(offset) == IS_LONG) {
+	if (Z_TYPE_P(offset) == IS_LONG)
 		item = PySequence_GetItem(pip->object, Z_LVAL_P(offset));
-	}
 
 	/*
 	 * Otherwise, if this object provides the mapping protocol, our offset's
@@ -146,7 +146,8 @@ python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 	 */
 	if (Z_TYPE_P(offset) == IS_LONG && PySequence_Check(pip->object)) {
 		if (PySequence_SetItem(pip->object, Z_LVAL_P(offset), val) == -1)
-			php_error(E_ERROR, "Failed to set sequence item %d", Z_LVAL_P(offset));
+			php_error(E_ERROR, "Python: Failed to set sequence item %d",
+					  Z_LVAL_P(offset));
 	}
 
 	/*
@@ -156,7 +157,8 @@ python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 	else if (PyMapping_Check(pip->object)) {
 		convert_to_string_ex(&offset);
 		if (PyMapping_SetItemString(pip->object, Z_STRVAL_P(offset), val) == -1)
-			php_error(E_ERROR, "Failed to set mapping item '%s'", Z_STRVAL_P(offset));
+			php_error(E_ERROR, "Python: Failed to set mapping item '%s'",
+					  Z_STRVAL_P(offset));
 	}
 
 	Py_XDECREF(val);
@@ -204,9 +206,8 @@ python_dimension_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 	 * If we've been handed an integer value, check if this is a valid item
 	 * index.  PySequence_GetItem() will perform a PySequence_Check() test.
 	 */
-	if (Z_TYPE_P(member) == IS_LONG) {
+	if (Z_TYPE_P(member) == IS_LONG)
 		item = PySequence_GetItem(pip->object, Z_LVAL_P(member));
-	}
 
 	/*
 	 * Otherwise, check if this object provides the mapping protocol.  If it
@@ -219,7 +220,7 @@ python_dimension_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 
 	/*
 	 * If we have a valid item at this point, we have a chance at success.  The
-	 * last thing we need to consider is whehter or not the item's value is
+	 * last thing we need to consider is whether or not the item's value is
 	 * considered "true" if check_empty has been specified.  We use Python's
 	 * notion of truth here for consistency, although it may be more correct to
 	 * use PHP's notion of truth (as determined by zend_is_true()) should we
@@ -241,8 +242,10 @@ python_property_delete(zval *object, zval *member TSRMLS_DC)
 	PHP_PYTHON_FETCH(pip, object);
 
 	convert_to_string_ex(&member);
-	if (PyObject_DelAttrString(pip->object, Z_STRVAL_P(member)) == -1)
-		php_error(E_ERROR, "Failed to delete attribute '%s'", Z_STRVAL_P(member));
+	if (PyObject_DelAttrString(pip->object, Z_STRVAL_P(member)) == -1) {
+		php_error(E_ERROR, "Python: Failed to delete attribute '%s'",
+				  Z_STRVAL_P(member));
+	}
 }
 /* }}} */
 /* {{{ python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
@@ -257,9 +260,8 @@ python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
 	 * If we've been given a numeric offset and this object provides the
 	 * sequence protocol, attempt to delete the item using a sequence index.
 	 */
-	if (Z_TYPE_P(offset) == IS_LONG && PySequence_Check(pip->object)) {
+	if (Z_TYPE_P(offset) == IS_LONG && PySequence_Check(pip->object))
 		deleted = PySequence_DelItem(pip->object, Z_LVAL_P(offset)) != -1;
-	}
 
 	/*
 	 * If we failed to delete the item using the sequence protocol, use the
@@ -272,7 +274,7 @@ python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
 
 	/* If we still haven't deleted the requested item, trigger an error. */
 	if (!deleted)
-		php_error(E_ERROR, "Failed to delete item");
+		php_error(E_ERROR, "Python: Failed to delete item");
 }
 /* }}} */
 /* {{{ python_get_properties(zval *object TSRMLS_DC)
@@ -312,9 +314,8 @@ python_get_method(zval **object_ptr, char *method, int method_len TSRMLS_DC)
 	PyObject *func;
 
 	/* Quickly check if this object has a method with the requested name. */
-	if (PyObject_HasAttrString(pip->object, method) == 0) {
+	if (PyObject_HasAttrString(pip->object, method) == 0)
 		return NULL;
-	}
 
 	/* Attempt to fetch the requested method and verify that it's callable. */
 	func = PyObject_GetAttrString(pip->object, method);
@@ -362,8 +363,8 @@ python_call_method(char *method_name, INTERNAL_FUNCTION_PARAMETERS)
 		args = pip_args_to_tuple(ZEND_NUM_ARGS(), 0 TSRMLS_CC);
 
 		/*
-		 * Invoke the requested method and store the resul. If we have a tuple
-		 * of arguments, remember to free (decref) it.
+		 * Invoke the requested method and store the result.  If we have a
+		 * tuple of arguments, remember to free (decref) it.
 		 */
 		result = PyObject_CallObject(method, args); 
 		Py_DECREF(method);
@@ -406,7 +407,7 @@ python_get_class_name(zval *object, char **class_name,
 					  zend_uint *class_name_len, int parent TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
-	char *key = (parent) ? "__module__" : "__class__";
+	const char *key = (parent) ? "__module__" : "__class__";
 	PyObject *attr, *str;
 
 	/* Start off with some safe initial values. */
@@ -422,9 +423,9 @@ python_get_class_name(zval *object, char **class_name,
 	 */
 	if (attr = PyObject_GetAttrString(pip->object, key)) {
 		if (str = PyObject_Str(attr)) {
-			*class_name_len = sizeof("Python.") + PyString_Size(str);
+			*class_name_len = sizeof("Python.") + PyString_GET_SIZE(str);
 			*class_name = (char *)emalloc(sizeof(char *) * *class_name_len);
-			zend_sprintf(*class_name, "Python.%s", PyString_AsString(str));
+			zend_sprintf(*class_name, "Python.%s", PyString_AS_STRING(str));
 			Py_DECREF(str);
 		}
 		Py_DECREF(attr);
