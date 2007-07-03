@@ -399,7 +399,6 @@ int
 pip_pyobject_to_zobject(PyObject *o, zval *zv TSRMLS_DC)
 {
 	php_python_object *pip;
-	zval *ret;
 
 	/* Create a new instance of a PHP Python object. */
 	if (object_init_ex(zv, &python_class_entry) != SUCCESS)
@@ -410,7 +409,7 @@ pip_pyobject_to_zobject(PyObject *o, zval *zv TSRMLS_DC)
 	 * reference count of our Python object and associate it with our PHP
 	 * Python object instance.
 	 */
-	pip = (php_python_object *)zend_object_store_get_object(ret TSRMLS_CC);
+	pip = (php_python_object *)zend_object_store_get_object(zv TSRMLS_CC);
 	Py_INCREF(o);
 	pip->object = o;
 
