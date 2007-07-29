@@ -22,7 +22,7 @@ array(6) {
   ["__doc__"]=>
   NULL
   ["__init__"]=>
-  object(Python.<type 'function'>)#2 (0) {
+  object(Python <type 'function'>)#2 (0) {
   }
   ["__module__"]=>
   string(8) "__main__"

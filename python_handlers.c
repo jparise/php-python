@@ -510,14 +510,14 @@ python_get_class_name(zval *object, char **class_name,
 	 * Attempt to use the Python object instance's special read-only attributes
 	 * to determine object's class name.  We use __class__ unless we've been
 	 * asked for the name of our parent, in which case we use __module__.  We
-	 * prefix the class name with "Python." to avoid confusion with native PHP
+	 * prefix the class name with "Python " to avoid confusion with native PHP
 	 * classes.
 	 */
 	if (attr = PyObject_GetAttrString(pip->object, key)) {
 		if (str = PyObject_Str(attr)) {
-			*class_name_len = sizeof("Python.") + PyString_GET_SIZE(str);
+			*class_name_len = sizeof("Python ") + PyString_GET_SIZE(str);
 			*class_name = (char *)emalloc(sizeof(char *) * *class_name_len);
-			zend_sprintf(*class_name, "Python.%s", PyString_AS_STRING(str));
+			zend_sprintf(*class_name, "Python %s", PyString_AS_STRING(str));
 			Py_DECREF(str);
 		}
 		Py_DECREF(attr);
