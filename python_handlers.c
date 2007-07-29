@@ -31,6 +31,7 @@
 #include "php.h"
 #include "php_python_internal.h"
 
+/* Helpers */
 /* {{{ efree_function(zend_internal_function *func)
    Frees the memory allocated to a zend_internal_function structure. */
 static void
@@ -55,7 +56,70 @@ efree_function(zend_internal_function *func)
 	efree(func);
 }
 /* }}} */
+/* {{{ merge_class_dict(PyObject *o, HashTable *ht TSRMLS_DC)
+   Merge the contents of the class's __dict__ attribute into the hashtable. */
+static int
+merge_class_dict(PyObject *o, HashTable *ht TSRMLS_DC)
+{
+	PyObject *d;
+	PyObject *bases;
 
+	/* We assume that the Python object is a class type. */
+	assert(PyType_Check(o));
+
+	/*
+	 * Start by attempting to merge the contents of the class type's __dict__.
+	 * It's alright if the class type doesn't have a __dict__ attribute.
+	 */
+	d = PyObject_GetAttrString(o, "__dict__");
+	if (d == NULL)
+		PyErr_Clear();
+	else {
+		int result = pip_mapping_to_hash(d, ht TSRMLS_CC);
+		Py_DECREF(d);
+		if (result != SUCCESS)
+			return FAILURE;
+	}
+
+	/*
+	 * We now attempt to recursively merge in the base types' __dicts__s.
+	 */
+	bases = PyObject_GetAttrString(o, "__bases__");
+	if (bases == NULL)
+		PyErr_Clear();
+	else {
+		Py_ssize_t i, n;
+		n = PySequence_Size(bases);
+		if (n < 0)
+			PyErr_Clear();
+		else {
+			for (i = 0; i < n; i++) {
+				int status;
+				PyObject *base = PySequence_GetItem(bases, i);
+				if (base == NULL) {
+					Py_DECREF(bases);
+					return FAILURE;
+				}
+
+				/* Recurse through this base class. */
+				status = merge_class_dict(base, ht);
+				Py_DECREF(base);
+				if (status != SUCCESS) {
+					Py_DECREF(bases);
+					return FAILURE;
+				}
+			}
+
+		}
+
+		Py_DECREF(bases);
+	}
+
+	return SUCCESS;
+}
+/* }}} */
+
+/* Object Handlers */
 /* {{{ python_read_property(zval *object, zval *member, int type TSRMLS_DC)
  */
 static zval *
@@ -283,22 +347,50 @@ static HashTable *
 python_get_properties(zval *object TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
-	PyObject *dict;
 	HashTable *ht;
-
-	/* Initialize the hashtable which will hold the list of properties. */
-	ALLOC_HASHTABLE(ht);
-	if (zend_hash_init(ht, 0, NULL, ZVAL_PTR_DTOR, 0) != SUCCESS)
-		return NULL;
+	PyObject *o;
+	int status;
 
 	/*
-	 * Fetch the dictionary containing all of this object's attributes
-	 * (__dict__) and store its contents in our PHP hashtable.
+	 * Allocate a hashtable into which we will copy this Python object's
+	 * properties.  If we can't initialize the hashtable, we can't continue.
 	 */
-	dict = PyObject_GetAttrString(pip->object, "__dict__");
-	if (dict) {
-		pip_mapping_to_hash(dict, ht TSRMLS_CC);
-		Py_DECREF(dict);
+	ALLOC_HASHTABLE(ht);
+	if (zend_hash_init(ht, 0, NULL, ZVAL_PTR_DTOR, 0) != SUCCESS) {
+		FREE_HASHTABLE(ht);
+		return NULL;
+	}
+
+	/*
+	 * Attempt to append the contents of this object's __dict__ attribute to
+	 * our hashtable.  If this object has no __dict__, we have no properties
+	 * and return failure.
+	 */
+	o = PyObject_GetAttrString(pip->object, "__dict__");
+	if (o == NULL) {
+		FREE_HASHTABLE(ht);
+		return NULL;
+	}
+
+	status = pip_mapping_to_hash(o, ht TSRMLS_CC);
+	Py_DECREF(o);
+	if (status != SUCCESS) {
+		FREE_HASHTABLE(ht);
+		return NULL;
+	}
+
+	/*
+	 * We also attempt to merge any properties inherited from our base
+	 * class(es) into the final result.
+	 */
+	o = PyObject_GetAttrString(pip->object, "__class__");
+	if (o) {
+		status = merge_class_dict(o, ht);
+		Py_DECREF(o);
+		if (status != SUCCESS) {
+			FREE_HASHTABLE(ht);
+			return NULL;
+		}
 	}
 
     return ht;
@@ -407,7 +499,7 @@ python_get_class_name(zval *object, char **class_name,
 					  zend_uint *class_name_len, int parent TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
-	const char *key = (parent) ? "__module__" : "__class__";
+	const char * const key = (parent) ? "__module__" : "__class__";
 	PyObject *attr, *str;
 
 	/* Start off with some safe initial values. */
