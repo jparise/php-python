@@ -131,11 +131,13 @@ python_read_property(zval *object, zval *member, int type TSRMLS_DC)
 
 	convert_to_string_ex(&member);
 
-	if (attr = PyObject_GetAttrString(pip->object, Z_STRVAL_P(member))) {
+	attr = PyObject_GetAttrString(pip->object, Z_STRVAL_P(member));
+	if (attr) {
 		MAKE_STD_ZVAL(return_value);
 		pip_pyobject_to_zval(attr, return_value TSRMLS_CC);
 		Py_DECREF(attr);
-	}
+	} else
+		PyErr_Clear();
 
 	/* TODO: Do something with the 'type' parameter? */
 
@@ -153,9 +155,11 @@ python_write_property(zval *object, zval *member, zval *value TSRMLS_DC)
 	val = pip_zval_to_pyobject(value TSRMLS_CC);
 	if (val) {
 		convert_to_string_ex(&member);
-		if (PyObject_SetAttrString(pip->object, Z_STRVAL_P(member), val) == -1)
+		if (PyObject_SetAttrString(pip->object, Z_STRVAL_P(member), val) == -1) {
+			PyErr_Clear();
 			php_error(E_ERROR, "Python: Failed to set attribute %s",
 					  Z_STRVAL_P(member));
+		}
 	}
 }
 /* }}} */
@@ -189,7 +193,8 @@ python_read_dimension(zval *object, zval *offset, int type TSRMLS_DC)
 		MAKE_STD_ZVAL(return_value);
 		pip_pyobject_to_zval(item, return_value TSRMLS_CC);
 		Py_DECREF(item);
-	}
+	} else
+		PyErr_Clear();
 
 	/* TODO: Do something with the 'type' parameter? */
 
@@ -209,9 +214,11 @@ python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 	 * the sequence protocol to set this item.
 	 */
 	if (Z_TYPE_P(offset) == IS_LONG && PySequence_Check(pip->object)) {
-		if (PySequence_SetItem(pip->object, Z_LVAL_P(offset), val) == -1)
-			php_error(E_ERROR, "Python: Failed to set sequence item %d",
+		if (PySequence_SetItem(pip->object, Z_LVAL_P(offset), val) == -1) {
+			PyErr_Clear();
+			php_error(E_ERROR, "Python: Failed to set sequence item %ld",
 					  Z_LVAL_P(offset));
+		}
 	}
 
 	/*
@@ -220,9 +227,11 @@ python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 	 */
 	else if (PyMapping_Check(pip->object)) {
 		convert_to_string_ex(&offset);
-		if (PyMapping_SetItemString(pip->object, Z_STRVAL_P(offset), val) == -1)
+		if (PyMapping_SetItemString(pip->object, Z_STRVAL_P(offset), val) == -1) {
+			PyErr_Clear();
 			php_error(E_ERROR, "Python: Failed to set mapping item '%s'",
 					  Z_STRVAL_P(offset));
+		}
 	}
 
 	Py_XDECREF(val);
@@ -234,6 +243,7 @@ static int
 python_property_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
+	PyObject *attr;
 
 	/* We're only concerned with the string representation of this value. */
 	convert_to_string_ex(&member);
@@ -245,12 +255,13 @@ python_property_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 	 * Python's notion of truth here.
 	 */
 	if (check_empty) {
-		PyObject *a = PyObject_GetAttrString(pip->object, Z_STRVAL_P(member));
-		if (a) {
-			int ret = (PyObject_IsTrue(a) == 1);
-			Py_DECREF(a);
+		attr = PyObject_GetAttrString(pip->object, Z_STRVAL_P(member));
+		if (attr) {
+			int ret = (PyObject_IsTrue(attr) == 1);
+			Py_DECREF(attr);
 			return ret;
-		}
+		} else
+			PyErrClear();
 	}
 
 	/* Otherwise, just check for the existence of the attribute. */
@@ -293,7 +304,8 @@ python_dimension_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 	if (item) {
 		ret = (check_empty) ? (PyObject_IsTrue(item) == 1) : 1;
 		Py_DECREF(item);
-	}
+	} else
+		PyErr_Clear();
 
 	return ret;
 }
@@ -307,6 +319,7 @@ python_property_delete(zval *object, zval *member TSRMLS_DC)
 
 	convert_to_string_ex(&member);
 	if (PyObject_DelAttrString(pip->object, Z_STRVAL_P(member)) == -1) {
+		PyErr_Clear();
 		php_error(E_ERROR, "Python: Failed to delete attribute '%s'",
 				  Z_STRVAL_P(member));
 	}
@@ -337,8 +350,10 @@ python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
 	}
 
 	/* If we still haven't deleted the requested item, trigger an error. */
-	if (!deleted)
+	if (!deleted) {
+		PyErr_Clear();
 		php_error(E_ERROR, "Python: Failed to delete item");
+	}
 }
 /* }}} */
 /* {{{ python_get_properties(zval *object TSRMLS_DC)
@@ -368,6 +383,7 @@ python_get_properties(zval *object TSRMLS_DC)
 	 */
 	o = PyObject_GetAttrString(pip->object, "__dict__");
 	if (o == NULL) {
+		PyErr_Clear();
 		FREE_HASHTABLE(ht);
 		return NULL;
 	}
