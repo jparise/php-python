@@ -14,7 +14,7 @@
   <active>yes</active>
  </lead>
  <date>2007-07-29</date>
- <time>16:28:24</time>
+ <time>17:16:08</time>
  <version>
   <release>0.8.0</release>
   <api>0.5.0</api>
@@ -35,7 +35,16 @@
    </dir> <!-- /examples -->
    <dir name="tests">
     <file name="convert_to_php.phpt" role="test" />
+    <file name="object_count_elements.phpt" role="test" />
+    <file name="object_dimension_delete.phpt" role="test" />
+    <file name="object_dimension_exists.phpt" role="test" />
     <file name="object_get_properties.phpt" role="test" />
+    <file name="object_property_delete.phpt" role="test" />
+    <file name="object_property_exists.phpt" role="test" />
+    <file name="object_read_dimension.phpt" role="test" />
+    <file name="object_read_property.phpt" role="test" />
+    <file name="object_write_dimension.phpt" role="test" />
+    <file name="object_write_property.phpt" role="test" />
     <file name="python_call.phpt" role="test" />
     <file name="python_eval.phpt" role="test" />
     <file name="python_exec.phpt" role="test" />
