@@ -4,10 +4,10 @@ Python: Object (dimension_delete)
 <?php include('skipif.inc'); ?>
 --FILE--
 <?php
-$py = python_eval('(1, 2, 3)');
-var_dump(isset($py[1]));
-unset($py[1]);
-var_dump(isset($py[1]));
+$py = python_eval('[1, 2, 3]');
+var_dump(isset($py[2]));
+unset($py[2]);
+var_dump(isset($py[2]));
 --EXPECT--
 bool(true)
 bool(false)
