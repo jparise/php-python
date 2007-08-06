@@ -40,6 +40,14 @@
 
 #include "zend.h"
 
+/*
+ * Py_ssize_t was introduced in Python 2.5.  Define our own version for
+ * compatiblity with earlier versions.
+ */
+#ifndef Py_ssize_t
+	#define Py_ssize_t ssize_t
+#endif
+
 typedef struct _php_python_object {
 	PyObject *			object;
     zend_class_entry *	ce;
