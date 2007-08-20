@@ -377,6 +377,34 @@ python_get_properties(zval *object TSRMLS_DC)
 	}
 
 	/*
+	 * If the object supports the sequence or mapping protocol, just copy
+	 * the container's contents into the output hashtable.
+	 *
+	 * XXX: This isn't strictly correct; it's a side-effect of our approach
+	 * of treating all Python objects as PHP objects.  We'd really like PHP
+	 * to attempt to attempt to "cast" our Python object to an array-like
+	 * object first and then use the dimension APIs, in the spirit of
+	 * Python's "duck typing", but those casting operations don't currently
+	 * exist.  We now have the potential for false-positive conversions
+	 * below, where we return the sequence or mapping contents of a Python
+	 * object that also has a legitimate set of additional properties.
+	 */
+	if (PySequence_Check(pip->object)) {
+		if (pip_sequence_to_hash(pip->object, ht TSRMLS_CC) != SUCCESS) {
+			FREE_HASHTABLE(ht);
+			return NULL;
+		}
+		return ht;
+	}
+	if (PyMapping_Check(pip->object)) {
+		if (pip_mapping_to_hash(pip->object, ht TSRMLS_CC) != SUCCESS) {
+			FREE_HASHTABLE(ht);
+			return NULL;
+		}
+		return ht;
+	}
+
+	/*
 	 * Attempt to append the contents of this object's __dict__ attribute to
 	 * our hashtable.  If this object has no __dict__, we have no properties
 	 * and return failure.
