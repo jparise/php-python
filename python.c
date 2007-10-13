@@ -313,7 +313,7 @@ PHP_FUNCTION(python_eval)
 	 * At this point, we're done with our PyObject* value, as well.  We can
 	 * safely release our reference to it now.
 	 */
-	if (pip_pyobject_to_zval(v, return_value) == FAILURE)
+	if (pip_pyobject_to_zval(v, return_value TSRMLS_CC) == FAILURE)
 		ZVAL_NULL(return_value);
 
 	Py_DECREF(v);

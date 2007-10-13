@@ -102,7 +102,7 @@ merge_class_dict(PyObject *o, HashTable *ht TSRMLS_DC)
 				}
 
 				/* Recurse through this base class. */
-				status = merge_class_dict(base, ht);
+				status = merge_class_dict(base, ht TSRMLS_CC);
 				Py_DECREF(base);
 				if (status != SUCCESS) {
 					Py_DECREF(bases);
@@ -429,7 +429,7 @@ python_get_properties(zval *object TSRMLS_DC)
 	 */
 	o = PyObject_GetAttrString(pip->object, "__class__");
 	if (o) {
-		status = merge_class_dict(o, ht);
+		status = merge_class_dict(o, ht TSRMLS_CC);
 		Py_DECREF(o);
 		if (status != SUCCESS) {
 			FREE_HASHTABLE(ht);
