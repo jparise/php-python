@@ -261,7 +261,7 @@ python_property_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 			Py_DECREF(attr);
 			return ret;
 		} else
-			PyErrClear();
+			PyErr_Clear();
 	}
 
 	/* Otherwise, just check for the existence of the attribute. */
