@@ -49,8 +49,9 @@
 #endif
 
 typedef struct _php_python_object {
+	zend_object			base;
 	PyObject *			object;
-    zend_class_entry *	ce;
+	zend_class_entry *	ce;
 } php_python_object;
 
 #define PHP_PYTHON_FETCH(name, zv) php_python_object *name = (php_python_object *)zend_object_store_get_object(zv TSRMLS_CC)
