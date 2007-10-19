@@ -27,7 +27,7 @@
 #include "php.h"
 #include "php_python_internal.h"
 
-extern zend_class_entry python_class_entry;
+extern zend_class_entry *python_class_entry;
 
 /* PHP to Python Conversions */
 
@@ -401,7 +401,7 @@ pip_pyobject_to_zobject(PyObject *o, zval *zv TSRMLS_DC)
 	php_python_object *pip;
 
 	/* Create a new instance of a PHP Python object. */
-	if (object_init_ex(zv, &python_class_entry) != SUCCESS)
+	if (object_init_ex(zv, python_class_entry) != SUCCESS)
 		return FAILURE;
 
 	/*
