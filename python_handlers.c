@@ -65,7 +65,7 @@ merge_class_dict(PyObject *o, HashTable *ht TSRMLS_DC)
 	PyObject *bases;
 
 	/* We assume that the Python object is a class type. */
-	assert(PyType_Check(o));
+	assert(PyClass_Check(o));
 
 	/*
 	 * Start by attempting to merge the contents of the class type's __dict__.
