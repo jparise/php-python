@@ -7,7 +7,6 @@ Python: python_call()
 
 $py = <<<EOT
 def Test(n):
-    print "Testing"
     l = [1, 2, 3]
     l.append(n)
     return l
@@ -28,10 +27,8 @@ echo "\n";
 --EXPECT--
 bool(true)
 
-Testing
 bool(true)
 
-Testing
 array(4) {
   [0]=>
   int(1)
