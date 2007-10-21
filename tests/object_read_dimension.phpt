@@ -1,7 +1,7 @@
 --TEST--
 Python: Object (read_dimension)
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php if (!extension_loaded('python')) die("skip\n");
 --FILE--
 <?php
 $py = python_eval('(1, 2, 3)');

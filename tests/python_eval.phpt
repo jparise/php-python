@@ -1,7 +1,7 @@
 --TEST--
 Python: python_eval()
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php if (!extension_loaded('python')) die("skip\n");
 --FILE--
 <?php
 echo python_eval("10 * 10");
