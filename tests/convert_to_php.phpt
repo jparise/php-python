@@ -1,7 +1,7 @@
 --TEST--
 Python: Convert Python types to PHP types
 --SKIPIF--
-<?php include('skipif.inc'); ?>
+<?php if (!extension_loaded('python')) die("skip\n");
 --FILE--
 <?php
 var_dump(python_eval("None"));
