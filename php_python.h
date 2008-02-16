@@ -46,6 +46,8 @@ PHP_RINIT_FUNCTION(python);
 PHP_RSHUTDOWN_FUNCTION(python);
 PHP_MINFO_FUNCTION(python);
 
+PHP_FUNCTION(python_version);
+
 PHP_FUNCTION(python_construct);
 PHP_FUNCTION(python_eval);
 PHP_FUNCTION(python_exec);

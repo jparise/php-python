@@ -41,6 +41,7 @@ zend_class_entry *python_class_entry;
 /* {{{ python_functions[]
  */
 function_entry python_functions[] = {
+	PHP_FE(python_version,		NULL)
 	PHP_FE(python_eval,			NULL)
 	PHP_FE(python_exec,			NULL)
 	PHP_FE(python_call,			NULL)
@@ -211,6 +212,14 @@ python_error(int error_type)
 		Py_DECREF(type);
 		Py_DECREF(value);
 	}
+}
+/* }}} */
+
+/* {{{ proto string python_version()
+   Returns the Python interpreter's version as a string. */
+PHP_FUNCTION(python_version)
+{
+	RETURN_STRING(Py_GetVersion(), 0);
 }
 /* }}} */
 
