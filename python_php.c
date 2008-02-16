@@ -41,8 +41,8 @@ php_var(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s#", &name, &len))
 		return NULL;
 
-	if (zend_hash_find(&EG(symbol_table), name, len, (void **)&v) != SUCCESS) {
-		PyErr_Format(PyExc_NameError, "Can't find variable named %s", name);
+	if (zend_hash_find(&EG(symbol_table), name, len+1, (void **)&v) != SUCCESS) {
+		PyErr_Format(PyExc_NameError, "Undefined variable: %s", name);
 		return NULL;
 	}
 
@@ -61,7 +61,7 @@ php_version(PyObject *self, PyObject *args)
 /* {{{ python_php_methods[]
  */
 static PyMethodDef python_php_methods[] = {
-	{"version",			php_version,		METH_VARARGS},
+	{"version",			php_version,		METH_NOARGS},
 	{"var",				php_var,			METH_VARARGS},
 	{NULL, NULL, 0, NULL}
 };

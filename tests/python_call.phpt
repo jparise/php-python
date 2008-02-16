@@ -12,7 +12,7 @@ def Test(n):
     return l
 EOT;
 
-# Execute the python code (in the __main__module)
+# Execute the python code (in the __main__ module)
 var_dump(python_exec($py));
 echo "\n";
 
