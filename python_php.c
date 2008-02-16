@@ -34,17 +34,19 @@ php_var(PyObject *self, PyObject *args)
 {
 	char *name;
 	int len;
-	zval **data;
+	zval **v;
 
 	TSRMLS_FETCH();
 
 	if (!PyArg_ParseTuple(args, "s#", &name, &len))
-		return Py_None;
+		return NULL;
 
-	if (zend_hash_find(&EG(symbol_table), name, len, (void **)&data) != SUCCESS)
-		return Py_None;
+	if (zend_hash_find(&EG(symbol_table), name, len, (void **)&v) != SUCCESS) {
+		PyErr_Format(PyExc_NameError, "Can't find variable named %s", name);
+		return NULL;
+	}
 
-	return pip_zval_to_pyobject(*data TSRMLS_CC);
+	return pip_zval_to_pyobject(*v TSRMLS_CC);
 }
 /* }}} */
 /* {{{ php_version
