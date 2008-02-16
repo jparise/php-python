@@ -1,7 +1,7 @@
 /*
  * Python in PHP - Embedded Python Extension
  *
- * Copyright (c) 2003,2004,2005,2006,2007 Jon Parise <jon@php.net>
+ * Copyright (c) 2003,2004,2005,2006,2007,2008 Jon Parise <jon@php.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
