@@ -68,7 +68,7 @@ ZEND_GET_MODULE(python)
 /* }}} */
 /* {{{ php_python_constructor_function
  */
-zend_internal_function php_python_constructor_function = {
+zend_internal_function php_python_constructor = {
 	ZEND_INTERNAL_FUNCTION,		/* type */
 	"__construct",				/* function_name */
 	NULL,						/* scope */
@@ -111,7 +111,7 @@ PHP_MINIT_FUNCTION(python)
 	INIT_CLASS_ENTRY(ce, "Python", NULL);
 	python_class_entry = zend_register_internal_class(&ce TSRMLS_CC);
 	python_class_entry->create_object = python_object_create;
-	python_class_entry->constructor = (zend_function *)&php_python_constructor_function;
+	python_class_entry->constructor = (zend_function *)&php_python_constructor;
 
 	/*
 	 * Initialize the embedded Python interpreter.  Note that we skip signal
@@ -119,6 +119,11 @@ PHP_MINIT_FUNCTION(python)
 	 */
 	Py_IgnoreEnvironmentFlag = 0;
 	Py_InitializeEx(0);
+
+	/*
+	 * Initialize all of our Python modules.
+	 */
+	python_php_init();
 
 	/*
 	 * At this point, the embedded Python interpreter should be initialized

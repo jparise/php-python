@@ -191,7 +191,6 @@ python_get_arg_info(PyObject *callable, zend_arg_info **arg_info)
 }
 /* }}} */
 
-
 /*
  * Local variables:
  * c-basic-offset: 4
