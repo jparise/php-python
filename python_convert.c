@@ -346,7 +346,7 @@ pip_mapping_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
 			 * conversion fails, we must remember to free the allocated zval
 			 * below.
 			 */
-			MAKE_STD_ZVAL(v);
+			ALLOC_INIT_ZVAL(v);
 			status = pip_pyobject_to_zval(item, v TSRMLS_CC);
 
 			/*
@@ -372,6 +372,7 @@ pip_mapping_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
 			 */
 			if (status == FAILURE) {
 				zval_dtor(v);
+				FREE_ZVAL(v);
 				break;
 			}
 		}
