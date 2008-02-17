@@ -29,7 +29,7 @@ bool(true)
 
 bool(true)
 
-array(4) {
+object(Python <type 'list'>)#1 (4) {
   [0]=>
   int(1)
   [1]=>

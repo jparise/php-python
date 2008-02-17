@@ -118,6 +118,62 @@ merge_class_dict(PyObject *o, HashTable *ht TSRMLS_DC)
 	return SUCCESS;
 }
 /* }}} */
+/* {{{ get_properties(PyObject *o, HashTable *ht TSRMLS_DC)
+   Populate a HashTable with the given object's properties. */
+static int
+get_properties(PyObject *o, HashTable *ht TSRMLS_DC)
+{
+	PyObject *attr;
+	int status;
+
+	/*
+	 * If the object supports the sequence or mapping protocol, just copy
+	 * the container's contents into the output hashtable.
+	 *
+	 * XXX: This isn't strictly correct; it's a side-effect of our approach
+	 * of treating all Python objects as PHP objects.  We'd really like PHP
+	 * to attempt to attempt to "cast" our Python object to an array-like
+	 * object first and then use the dimension APIs, in the spirit of
+	 * Python's "duck typing", but those casting operations don't currently
+	 * exist.  We now have the potential for false-positive conversions
+	 * below, where we return the sequence or mapping contents of a Python
+	 * object that also has a legitimate set of additional properties.
+	 */
+	if (PySequence_Check(o))
+		return pip_sequence_to_hash(o, ht TSRMLS_CC);
+
+	if (PyMapping_Check(o))
+		return pip_mapping_to_hash(o, ht TSRMLS_CC);
+
+	/*
+	 * Attempt to append the contents of this object's __dict__ attribute to
+	 * our hashtable.  If this object has no __dict__, we have no properties
+	 * and return failure.
+	 */
+	attr = PyObject_GetAttrString(o, "__dict__");
+	if (attr == NULL) {
+		PyErr_Clear();
+		return FAILURE;
+	}
+
+	status = pip_mapping_to_hash(attr, ht TSRMLS_CC);
+	Py_DECREF(attr);
+
+	/*
+	 * We also attempt to merge any properties inherited from our base
+	 * class(es) into the final result.
+	 */
+	if (status == SUCCESS) {
+		attr = PyObject_GetAttrString(o, "__class__");
+		if (attr) {
+			status = merge_class_dict(attr, ht TSRMLS_CC);
+			Py_DECREF(attr);
+		}
+	}
+
+    return status;
+}
+/* }}} */
 
 /* Object Handlers */
 /* {{{ python_read_property(zval *object, zval *member, int type TSRMLS_DC)
@@ -362,82 +418,11 @@ static HashTable *
 python_get_properties(zval *object TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
-	HashTable *ht;
-	PyObject *o;
-	int status;
 
-	/*
-	 * Allocate a hashtable into which we will copy this Python object's
-	 * properties.  If we can't initialize the hashtable, we can't continue.
-	 */
-	ALLOC_HASHTABLE(ht);
-	if (zend_hash_init(ht, 0, NULL, ZVAL_PTR_DTOR, 0) != SUCCESS) {
-		FREE_HASHTABLE(ht);
-		return NULL;
-	}
+	if (zend_hash_num_elements(pip->base.properties) == 0)
+		get_properties(pip->object, pip->base.properties TSRMLS_CC);
 
-	/*
-	 * If the object supports the sequence or mapping protocol, just copy
-	 * the container's contents into the output hashtable.
-	 *
-	 * XXX: This isn't strictly correct; it's a side-effect of our approach
-	 * of treating all Python objects as PHP objects.  We'd really like PHP
-	 * to attempt to attempt to "cast" our Python object to an array-like
-	 * object first and then use the dimension APIs, in the spirit of
-	 * Python's "duck typing", but those casting operations don't currently
-	 * exist.  We now have the potential for false-positive conversions
-	 * below, where we return the sequence or mapping contents of a Python
-	 * object that also has a legitimate set of additional properties.
-	 */
-	if (PySequence_Check(pip->object)) {
-		if (pip_sequence_to_hash(pip->object, ht TSRMLS_CC) != SUCCESS) {
-			FREE_HASHTABLE(ht);
-			return NULL;
-		}
-		return ht;
-	}
-	if (PyMapping_Check(pip->object)) {
-		if (pip_mapping_to_hash(pip->object, ht TSRMLS_CC) != SUCCESS) {
-			FREE_HASHTABLE(ht);
-			return NULL;
-		}
-		return ht;
-	}
-
-	/*
-	 * Attempt to append the contents of this object's __dict__ attribute to
-	 * our hashtable.  If this object has no __dict__, we have no properties
-	 * and return failure.
-	 */
-	o = PyObject_GetAttrString(pip->object, "__dict__");
-	if (o == NULL) {
-		PyErr_Clear();
-		FREE_HASHTABLE(ht);
-		return NULL;
-	}
-
-	status = pip_mapping_to_hash(o, ht TSRMLS_CC);
-	Py_DECREF(o);
-	if (status != SUCCESS) {
-		FREE_HASHTABLE(ht);
-		return NULL;
-	}
-
-	/*
-	 * We also attempt to merge any properties inherited from our base
-	 * class(es) into the final result.
-	 */
-	o = PyObject_GetAttrString(pip->object, "__class__");
-	if (o) {
-		status = merge_class_dict(o, ht TSRMLS_CC);
-		Py_DECREF(o);
-		if (status != SUCCESS) {
-			FREE_HASHTABLE(ht);
-			return NULL;
-		}
-	}
-
-    return ht;
+    return pip->base.properties;
 }
 /* }}} */
 /* {{{ python_get_method(zval **object_ptr, char *method, int method_len TSRMLS_DC)
