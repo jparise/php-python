@@ -44,6 +44,9 @@ python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC)
 
 	/* Release our reference to this Python object. */
 	Py_XDECREF(pip->object);
+
+	/* Destroy our base object, too. */ 
+	zend_object_std_dtor(&pip->base TSRMLS_CC);
 }
 /* }}} */
 /* {{{ python_object_free(void *object TSRMLS_DC)
