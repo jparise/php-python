@@ -7,7 +7,6 @@ Python: foreach
 
 function dump($a)
 {
-    ksort($a, SORT_REGULAR);
     foreach ($a as $k => $v) {
         echo "$k -> $v\n";
     }
@@ -39,6 +38,6 @@ List
 2 -> 3
 
 Dictionary
-one -> 1
 three -> 3
 two -> 2
+one -> 1

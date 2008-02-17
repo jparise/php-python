@@ -499,17 +499,6 @@ pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC)
 	}
 
 	/*
-	 * Python objects that follow the sequence or mapping protocols are
-	 * converted to PHP arrays.  Remember that PHP arrays are essentially
-	 * hashtables that can be treated as simple array-like containers.
-	 */
-	if (PySequence_Check(o))
-		return pip_sequence_to_array(o, zv TSRMLS_CC);
-
-	if (PyMapping_Check(o))
-		return pip_mapping_to_array(o, zv TSRMLS_CC);
-
-	/*
 	 * If all of the other conversions failed, we attempt to convert the
 	 * Python object to a PHP object.
 	 */

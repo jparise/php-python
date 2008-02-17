@@ -24,7 +24,7 @@ float(1.5)
 string(6) "string"
 string(6) "string"
 string(6) "string"
-array(3) {
+object(Python <type 'tuple'>)#1 (3) {
   [0]=>
   int(1)
   [1]=>
@@ -32,7 +32,7 @@ array(3) {
   [2]=>
   int(3)
 }
-array(3) {
+object(Python <type 'list'>)#1 (3) {
   [0]=>
   int(1)
   [1]=>
@@ -40,7 +40,7 @@ array(3) {
   [2]=>
   int(3)
 }
-array(3) {
+object(Python <type 'dict'>)#1 (3) {
   ["three"]=>
   int(3)
   ["two"]=>
