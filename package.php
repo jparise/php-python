@@ -9,7 +9,9 @@ EOT;
 
 $version = '0.8.0';
 $notes = <<<EOT
-Reawakened
+The extension has been largely rewritten to take advantage of the latest Zend object module.  Basic functionality is available but many features are still to come.  This release should be considered a "preview" release, intended to encourage general interest and feedback.
+
+This release is designed to work with Python 2.5.  Other releases has not been tested.
 EOT;
 
 $package = new PEAR_PackageFileManager2();
@@ -32,6 +34,7 @@ $result = $package->setOptions(array(
          'CREDITS'              => 'doc',
          'EXPERIMENTAL'         => 'doc',
          'TODO'                 => 'doc',
+         'Makefile.in'          => 'src',
     ),
 ));
 
@@ -51,7 +54,7 @@ $package->addMaintainer('lead', 'jon', 'Jon Parise', 'jon@php.net');
 
 $package->addRelease();
 $package->setProvidesExtension('python');
-$package->setAPIVersion('0.5.0');
+$package->setAPIVersion('0.6.0');
 $package->setAPIStability('alpha');
 $package->setReleaseVersion($version);
 $package->setReleaseStability('alpha');
