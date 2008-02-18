@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package packagerversion="1.6.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
+<package packagerversion="1.7.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
     http://pear.php.net/dtd/tasks-1.0.xsd
     http://pear.php.net/dtd/package-2.0
     http://pear.php.net/dtd/package-2.0.xsd">
@@ -13,18 +13,20 @@
   <email>jon@php.net</email>
   <active>yes</active>
  </lead>
- <date>2007-07-29</date>
- <time>17:16:08</time>
+ <date>2008-02-17</date>
+ <time>18:32:38</time>
  <version>
   <release>0.8.0</release>
-  <api>0.5.0</api>
+  <api>0.6.0</api>
  </version>
  <stability>
   <release>alpha</release>
   <api>alpha</api>
  </stability>
  <license>MIT License</license>
- <notes>Reawakened</notes>
+ <notes>The extension has been largely rewritten to take advantage of the latest Zend object module.  Basic functionality is available but many features are still to come.  This release should be considered a &quot;preview&quot; release, intended to encourage general interest and feedback.
+
+This release is designed to work with Python 2.5.  Other releases has not been tested.</notes>
  <contents>
   <dir baseinstalldir="/" name="/">
    <dir name="docs">
@@ -35,6 +37,7 @@
    </dir> <!-- /examples -->
    <dir name="tests">
     <file name="convert_to_php.phpt" role="test" />
+    <file name="foreach.phpt" role="test" />
     <file name="object_count_elements.phpt" role="test" />
     <file name="object_dimension_delete.phpt" role="test" />
     <file name="object_dimension_exists.phpt" role="test" />
@@ -45,23 +48,25 @@
     <file name="object_read_property.phpt" role="test" />
     <file name="object_write_dimension.phpt" role="test" />
     <file name="object_write_property.phpt" role="test" />
+    <file name="php_var.phpt" role="test" />
+    <file name="php_version.phpt" role="test" />
     <file name="python_call.phpt" role="test" />
     <file name="python_eval.phpt" role="test" />
     <file name="python_exec.phpt" role="test" />
-    <file name="skipif.inc" role="test" />
     <file name="TestModule.py" role="test" />
    </dir> <!-- /tests -->
    <file name="config.m4" role="src" />
    <file name="config.w32" role="src" />
    <file name="CREDITS" role="doc" />
    <file name="EXPERIMENTAL" role="doc" />
-   <file name="Makefile.in" role="data" />
+   <file name="Makefile.in" role="src" />
    <file name="php_python.h" role="src" />
    <file name="php_python_internal.h" role="src" />
    <file name="python.c" role="src" />
    <file name="python_convert.c" role="src" />
    <file name="python_handlers.c" role="src" />
    <file name="python_object.c" role="src" />
+   <file name="python_php.c" role="src" />
   </dir> <!-- / -->
  </contents>
  <dependencies>
@@ -80,15 +85,17 @@
   <release>
    <version>
     <release>0.8.0</release>
-    <api>0.5.0</api>
+    <api>0.6.0</api>
    </version>
    <stability>
     <release>alpha</release>
     <api>alpha</api>
    </stability>
-   <date>2007-07-29</date>
+   <date>2008-02-17</date>
    <license>MIT License</license>
-   <notes>Reawakened</notes>
+   <notes>The extension has been largely rewritten to take advantage of the latest Zend object module.  Basic functionality is available but many features are still to come.  This release should be considered a &quot;preview&quot; release, intended to encourage general interest and feedback.
+
+This release is designed to work with Python 2.5.  Other releases has not been tested.</notes>
   </release>
  </changelog>
 </package>
