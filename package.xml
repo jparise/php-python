@@ -14,7 +14,7 @@
   <active>yes</active>
  </lead>
  <date>2008-02-17</date>
- <time>18:34:31</time>
+ <time>18:36:12</time>
  <version>
   <release>0.8.0</release>
   <api>0.6.0</api>
@@ -26,7 +26,7 @@
  <license>MIT License</license>
  <notes>The extension has been largely rewritten to take advantage of the latest Zend object module.  Basic functionality is available but many features are still to come.  This release should be considered a &quot;preview&quot; release, intended to encourage general interest and feedback.
 
-This release is designed to work with Python 2.5.  Other releases has not been tested.</notes>
+This release is designed to work with Python 2.5.  Other releases have not been tested.</notes>
  <contents>
   <dir baseinstalldir="/" name="/">
    <dir name="docs">
@@ -95,7 +95,7 @@ This release is designed to work with Python 2.5.  Other releases has not been t
    <license>MIT License</license>
    <notes>The extension has been largely rewritten to take advantage of the latest Zend object module.  Basic functionality is available but many features are still to come.  This release should be considered a &quot;preview&quot; release, intended to encourage general interest and feedback.
 
-This release is designed to work with Python 2.5.  Other releases has not been tested.</notes>
+This release is designed to work with Python 2.5.  Other releases have not been tested.</notes>
   </release>
  </changelog>
 </package>
