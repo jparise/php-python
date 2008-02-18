@@ -48,7 +48,7 @@ $package->setPackage('python');
 $package->setPackageType('extsrc');
 $package->setSummary('Embedded Python');
 $package->setDescription($desc);
-$package->setChannel('pear.php.net');
+$package->setChannel('pecl.php.net');
 $package->setLicense('MIT License');
 $package->addMaintainer('lead', 'jon', 'Jon Parise', 'jon@php.net');
 

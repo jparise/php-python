@@ -4,7 +4,7 @@
     http://pear.php.net/dtd/package-2.0
     http://pear.php.net/dtd/package-2.0.xsd">
  <name>python</name>
- <channel>pear.php.net</channel>
+ <channel>pecl.php.net</channel>
  <summary>Embedded Python</summary>
  <description>This extension allows the Python interpreter to be embedded inside of PHP, allowing for the instantiate and manipulation of Python objects from within PHP.</description>
  <lead>
@@ -14,7 +14,7 @@
   <active>yes</active>
  </lead>
  <date>2008-02-17</date>
- <time>18:32:38</time>
+ <time>18:34:31</time>
  <version>
   <release>0.8.0</release>
   <api>0.6.0</api>
