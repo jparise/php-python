@@ -7,11 +7,10 @@ $desc = <<<EOT
 This extension allows the Python interpreter to be embedded inside of PHP, allowing for the instantiate and manipulation of Python objects from within PHP.
 EOT;
 
-$version = '0.8.0';
+$version = '0.8.1';
 $notes = <<<EOT
-The extension has been largely rewritten to take advantage of the latest Zend object module.  Basic functionality is available but many features are still to come.  This release should be considered a "preview" release, intended to encourage general interest and feedback.
-
-This release is designed to work with Python 2.5.  Other releases have not been tested.
+- The unix build infrastructure has been overhauled to support a wider range of build environments.  We now use python-config to query the build parameters.
+- The extension should now build against Python 2.4 "out of the box".
 EOT;
 
 $package = new PEAR_PackageFileManager2();
@@ -34,7 +33,6 @@ $result = $package->setOptions(array(
          'CREDITS'              => 'doc',
          'EXPERIMENTAL'         => 'doc',
          'TODO'                 => 'doc',
-         'Makefile.in'          => 'src',
     ),
 ));
 

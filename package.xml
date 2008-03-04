@@ -13,10 +13,10 @@
   <email>jon@php.net</email>
   <active>yes</active>
  </lead>
- <date>2008-02-17</date>
- <time>18:36:12</time>
+ <date>2008-03-03</date>
+ <time>23:43:55</time>
  <version>
-  <release>0.8.0</release>
+  <release>0.8.1</release>
   <api>0.6.0</api>
  </version>
  <stability>
@@ -24,9 +24,8 @@
   <api>alpha</api>
  </stability>
  <license>MIT License</license>
- <notes>The extension has been largely rewritten to take advantage of the latest Zend object module.  Basic functionality is available but many features are still to come.  This release should be considered a &quot;preview&quot; release, intended to encourage general interest and feedback.
-
-This release is designed to work with Python 2.5.  Other releases have not been tested.</notes>
+ <notes>- The unix build infrastructure has been overhauled to support a wider range of build environments.  We now use python-config to query the build parameters.
+- The extension should now build against Python 2.4 &quot;out of the box&quot;.</notes>
  <contents>
   <dir baseinstalldir="/" name="/">
    <dir name="docs">
@@ -59,7 +58,6 @@ This release is designed to work with Python 2.5.  Other releases have not been 
    <file name="config.w32" role="src" />
    <file name="CREDITS" role="doc" />
    <file name="EXPERIMENTAL" role="doc" />
-   <file name="Makefile.in" role="src" />
    <file name="php_python.h" role="src" />
    <file name="php_python_internal.h" role="src" />
    <file name="python.c" role="src" />
@@ -82,6 +80,20 @@ This release is designed to work with Python 2.5.  Other releases have not been 
  <providesextension>python</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <version>
+    <release>0.8.1</release>
+    <api>0.6.0</api>
+   </version>
+   <stability>
+    <release>alpha</release>
+    <api>alpha</api>
+   </stability>
+   <date>2008-03-03</date>
+   <license>MIT License</license>
+   <notes>- The unix build infrastructure has been overhauled to support a wider range of build environments.  We now use python-config to query the build parameters.
+- The extension should now build against Python 2.4 &quot;out of the box&quot;.</notes>
+  </release>
   <release>
    <version>
     <release>0.8.0</release>

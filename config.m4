@@ -1,51 +1,69 @@
 dnl $Id$
-dnl config.m4 for extension python
-dnl
-dnl TODO:
-dnl - Support multiple python versions
+dnl config.m4 for python extension
 
 PHP_ARG_WITH(python, for embedded Python support,
-[  --with-python[=DIR]     Include embedded Python support])
+[  --with-python           Include embedded Python support])
 
 if test "$PHP_PYTHON" != "no"; then
-  if test -r $PHP_PYTHON/; then
-     PYTHON_DIR=$PHP_PYTHON
-  else # search default path list
-     AC_MSG_CHECKING(for Python files in default path)
-     SEARCH_PATH="/usr/local /usr"
-     SEARCH_FOR="/include/python2.5/Python.h"
-     for i in $SEARCH_PATH ; do
-       if test -r $i/$SEARCH_FOR; then
-         PYTHON_DIR=$i
-         AC_MSG_RESULT(found in $i)
-       fi
-     done
-  fi
- 
-  if test -z "$PYTHON_DIR"; then
-     AC_MSG_RESULT(not found)
-     AC_MSG_ERROR(Please specify path to Python distribution files)
-  fi
 
-  AC_CHECK_LIB(dl, dlopen, [
-    LIBS="-ldl $LIBS"                                                       
-  ])
+    if test "$ext_shared" = "shared" || test "$ext_shared" = "yes"; then
+        AC_PATH_PROG([PYTHON_CONFIG],[python-config])
+    else
+        AC_PATH_PROG([PYTHON_CONFIG],[python-shared-config])
+    fi
 
-  dnl --with-python -> chech for lib and symbol presence
-  LIBNAME=python2.5
-  LIBSYMBOL=Py_Initialize
-  old_LIBS=$LIBS
-  LIBS="$LIBS -L$PYTHON_DIR/lib/python2.5/config -lm -pthread -lutil"
-  AC_CHECK_LIB($LIBNAME, $LIBSYMBOL, [AC_DEFINE(HAVE_PYTHONLIB,1,[ ])],
-		[AC_MSG_ERROR(wrong Python lib version or lib not found)])
-  LIBS=$old_LIBS
+    if test -z "$PYTHON_CONFIG"; then
+        AC_MSG_RESULT(not found)
+        AC_MSG_ERROR([Cannot find python-config in your system path])
+    fi
 
-  PHP_SUBST(PYTHON_SHARED_LIBADD)
-  PHP_ADD_LIBRARY_WITH_PATH($LIBNAME, $PYTHON_DIR/lib/python2.5/config, PYTHON_SHARED_LIBADD)
-  PHP_ADD_LIBRARY(m)
-  PHP_ADD_LIBRARY(util)
-  LIBS="$LIBS -pthread"
+    AC_MSG_CHECKING(for Python includes)
+    PYTHON_CFLAGS=`$PYTHON_CONFIG --includes`
+    AC_MSG_RESULT($PYTHON_CFLAGS)
 
-  PHP_ADD_INCLUDE($PYTHON_DIR/include/python2.5)
-  PHP_EXTENSION(python, $ext_shared)
+    AC_MSG_CHECKING(for Python libraries)
+    PYTHON_LDFLAGS=`$PYTHON_CONFIG --ldflags`
+    AC_MSG_RESULT($PYTHON_LDFLAGS)
+
+    AC_CHECK_LIB(pthread, pthread_create, [
+        PYTHON_LDFLAGS="-lpthread $PYTHON_LDFLAGS"
+    ])
+    AC_CHECK_LIB(dl, dlopen, [
+        PYTHON_LDFLAGS="-ldl $PYTHON_LDFLAGS"
+    ])
+
+    AC_MSG_CHECKING([consistency of Python build environment])
+    AC_LANG_PUSH([C])
+    LDFLAGS="$ac_save_LDFLAGS $PYTHON_LDFLAGS"
+    CFLAGS="$ac_save_CFLAGS $PYTHON_CFLAGS"
+    AC_TRY_LINK([
+            #include <Python.h>
+    ],[
+            Py_Initialize();
+    ],[pythonexists=yes],[pythonexists=no])
+
+    AC_MSG_RESULT([$pythonexists])
+
+    if test ! "$pythonexists" = "yes"; then
+        AC_MSG_ERROR([
+  Could not link test program to Python. Maybe the main Python library has been
+  installed in some non-standard library path. If so, pass it to configure,
+  via the LDFLAGS environment variable.
+  Example: ./configure LDFLAGS="-L/usr/non-standard-path/python/lib"
+  ============================================================================
+   ERROR!
+   You probably have to install the development version of the Python package
+   for your distribution.  The exact name of this package varies among them.
+  ============================================================================
+        ])
+    fi
+    AC_LANG_POP
+    CFLAGS="$ac_save_CFLAGS"
+    LDFLAGS="$ac_save_LDFLAGS"
+
+    PHP_EVAL_INCLINE($PYTHON_CFLAGS)
+    PHP_EVAL_LIBLINE($PYTHON_LDFLAGS, PYTHON_SHARED_LIBADD)
+    PHP_SUBST(PYTHON_SHARED_LIBADD)
+
+    PHP_NEW_EXTENSION(python, python.c python_convert.c python_handlers.c python_object.c python_php.c, $ext_shared)
 fi
