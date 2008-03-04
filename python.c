@@ -219,7 +219,7 @@ python_error(int error_type)
    Returns the Python interpreter's version as a string. */
 PHP_FUNCTION(python_version)
 {
-	RETURN_STRING(Py_GetVersion(), 0);
+	RETURN_STRING((char *)Py_GetVersion(), 0);
 }
 /* }}} */
 
