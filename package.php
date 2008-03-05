@@ -9,7 +9,7 @@ EOT;
 
 $version = '0.8.1';
 $notes = <<<EOT
-- The unix build infrastructure has been overhauled to support a wider range of build environments.  We now use python-config to query the build parameters.
+- The build infrastructure has been overhauled to support a wider range of build environments.  We now use PYTHONHOME and python under Windows and python-config under other operation systems to query the build parameters.
 - The extension should now build against Python 2.4 "out of the box".
 EOT;
 

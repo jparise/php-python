@@ -1,22 +1,45 @@
 // $Id$
-// vim:ft=javascript
+// vim:ft=javascript noet
 
 ARG_WITH("python", "Embedded Python support", "no");
+
+function get_python_version(PYTHON)
+{
+	var ver = execute('cmd /c ""' + PYTHON + '" -V 2>&1"');
+	if (ver.match(/Python (\d+)\.(\d+)/)) {
+		return RegExp.$1 + RegExp.$2;
+	}
+	return 0;
+}
 
 if (PHP_PYTHON != "no") {
 	if (PHP_PYTHON == "yes") {
 		PHP_PYTHON = WshShell.Environment("Process").Item("PYTHONHOME");
 	}
 
-	var libname = PHP_DEBUG == "yes" ? "python25_d.lib" : "python25.lib";
+	PYTHON = PATH_PROG('python');
+	if (!PYTHON) {
+		ERROR('python is required')
+	}
 
-	if (CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON",
-								 PHP_PYTHON + "\\include") &&
-		 CHECK_LIB(libname, "python", PHP_PYTHON + "\\libs")) {
+	PYTHON_VERSION = get_python_version(PYTHON);
+	if (PYTHON_VERSION < 24) {
+		WARNING('Python' + PYTHON_VERSION +
+				' is not officially supported by the python extension');
+	}
+
+	PYTHON_INCPATH = PHP_PYTHON + '\\include';
+	PYTHON_LIBPATH = PHP_PYTHON + '\\libs';
+
+	var libname = 'python' + PYTHON_VERSION;
+	libname += (PHP_DEBUG == 'yes') ? '_d.lib' : 'lib';
+
+	if (CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON", PYTHON_INCPATH) &&
+		 CHECK_LIB(libname, "python", PYTHON_LIBPATH)) {
 		EXTENSION("python", "python.c python_convert.c python_handlers.c python_object.c python_php.c", null, "/D PYTHON_EXPORTS");
 		AC_DEFINE("HAVE_PYTHON", 1);
 	} else {
-		WARNING("python not enabled; libraries and headers not found");
+		WARNING("Python not enabled; libraries and headers not found");
 	}
 }
 
