@@ -12,11 +12,14 @@ function get_python_version(PYTHON)
 	return 0;
 }
 
-if (PHP_PYTHON != "no") {
-	if (PHP_PYTHON == "yes") {
-		PHP_PYTHON = WshShell.Environment("Process").Item("PYTHONHOME");
-	}
+function get_python_prefix(PYTHON)
+{
+	var cmd = '-c "from distutils.sysconfig import *; print PREFIX,"'
+	var out = execute('cmd /c ""' + PYTHON + '" ' + cmd + ' 2>&1"');
+	return out.replace(new RegExp('\r\n'), '');
+}
 
+if (PHP_PYTHON != "no") {
 	PYTHON = PATH_PROG('python');
 	if (!PYTHON) {
 		ERROR('python is required')
@@ -28,18 +31,19 @@ if (PHP_PYTHON != "no") {
 				' is not officially supported by the python extension');
 	}
 
-	PYTHON_INCPATH = PHP_PYTHON + '\\include';
-	PYTHON_LIBPATH = PHP_PYTHON + '\\libs';
+	PYTHON_PREFIX = get_python_prefix(PYTHON);
+	PYTHON_INCPATH = PYTHON_PREFIX + '\\include';
+	PYTHON_LIBPATH = PYTHON_PREFIX + '\\libs';
 
 	var libname = 'python' + PYTHON_VERSION;
 	libname += (PHP_DEBUG == 'yes') ? '_d.lib' : 'lib';
 
-	if (CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON", PYTHON_INCPATH) &&
-		 CHECK_LIB(libname, "python", PYTHON_LIBPATH)) {
-		EXTENSION("python", "python.c python_convert.c python_handlers.c python_object.c python_php.c", null, "/D PYTHON_EXPORTS");
-		AC_DEFINE("HAVE_PYTHON", 1);
-	} else {
-		WARNING("Python not enabled; libraries and headers not found");
+	if (!CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON", PYTHON_INCPATH)
+		|| !CHECK_LIB(libname, "python", PYTHON_LIBPATH)) {
+		ERROR("Python not enabled; libraries and headers not found");
 	}
+
+	EXTENSION("python", "python.c python_convert.c python_handlers.c python_object.c python_php.c", PHP_PYTHON_SHARED, "/D PYTHON_EXPORTS");
+	AC_DEFINE("HAVE_PYTHON", 1);
 }
 
