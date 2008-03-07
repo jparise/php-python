@@ -36,7 +36,7 @@ if (PHP_PYTHON != "no") {
 	PYTHON_LIBPATH = PYTHON_PREFIX + '\\libs';
 
 	var libname = 'python' + PYTHON_VERSION;
-	libname += (PHP_DEBUG == 'yes') ? '_d.lib' : 'lib';
+	libname += (PHP_DEBUG == 'yes') ? '_d.lib' : '.lib';
 
 	if (!CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON", PYTHON_INCPATH)
 		|| !CHECK_LIB(libname, "python", PYTHON_LIBPATH)) {
