@@ -22,28 +22,28 @@ function get_python_prefix(PYTHON)
 if (PHP_PYTHON != "no") {
 	PYTHON = PATH_PROG('python');
 	if (!PYTHON) {
-		ERROR('python is required')
+		WARNING('Python not enabled; python executable not found')
+	} else {
+		PYTHON_VERSION = get_python_version(PYTHON);
+		if (PYTHON_VERSION < 24) {
+			WARNING('Python' + PYTHON_VERSION +
+					' is not officially supported by the python extension');
+		}
+
+		PYTHON_PREFIX = get_python_prefix(PYTHON);
+		PYTHON_INCPATH = PYTHON_PREFIX + '\\include';
+		PYTHON_LIBPATH = PYTHON_PREFIX + '\\libs';
+
+		var libname = 'python' + PYTHON_VERSION;
+		libname += (PHP_DEBUG == 'yes') ? '_d.lib' : '.lib';
+
+		if (!CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON", PYTHON_INCPATH)
+			|| !CHECK_LIB(libname, "python", PYTHON_LIBPATH)) {
+			WARNING("Python not enabled; libraries and headers not found");
+		} else {
+			EXTENSION("python", "python.c python_convert.c python_handlers.c python_object.c python_php.c", PHP_PYTHON_SHARED, "/D PYTHON_EXPORTS");
+			AC_DEFINE("HAVE_PYTHON", 1);
+		}
 	}
-
-	PYTHON_VERSION = get_python_version(PYTHON);
-	if (PYTHON_VERSION < 24) {
-		WARNING('Python' + PYTHON_VERSION +
-				' is not officially supported by the python extension');
-	}
-
-	PYTHON_PREFIX = get_python_prefix(PYTHON);
-	PYTHON_INCPATH = PYTHON_PREFIX + '\\include';
-	PYTHON_LIBPATH = PYTHON_PREFIX + '\\libs';
-
-	var libname = 'python' + PYTHON_VERSION;
-	libname += (PHP_DEBUG == 'yes') ? '_d.lib' : '.lib';
-
-	if (!CHECK_HEADER_ADD_INCLUDE("Python.h", "CFLAGS_PYTHON", PYTHON_INCPATH)
-		|| !CHECK_LIB(libname, "python", PYTHON_LIBPATH)) {
-		ERROR("Python not enabled; libraries and headers not found");
-	}
-
-	EXTENSION("python", "python.c python_convert.c python_handlers.c python_object.c python_php.c", PHP_PYTHON_SHARED, "/D PYTHON_EXPORTS");
-	AC_DEFINE("HAVE_PYTHON", 1);
 }
 
