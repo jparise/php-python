@@ -37,7 +37,7 @@
 static void
 efree_function(zend_internal_function *func)
 {
-	int i;
+	zend_uint i;
 
 	/* Free the estrdup'ed function name. */
 	efree(func->function_name);

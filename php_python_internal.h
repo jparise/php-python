@@ -61,6 +61,7 @@ int python_php_init();
 
 /* PHP Object API */
 zend_object_value python_object_create(zend_class_entry *ce TSRMLS_DC);
+zend_uint python_get_arg_info(PyObject *callable, zend_arg_info **arg_info);
 
 /* PHP to Python Conversion */
 PyObject * pip_hash_to_list(zval *hash TSRMLS_DC);
