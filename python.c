@@ -59,7 +59,7 @@ zend_module_entry python_module_entry = {
 	PHP_RINIT(python),
 	PHP_RSHUTDOWN(python),
 	PHP_MINFO(python),
-	NO_VERSION_YET,
+	PHP_PYTHON_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
 
@@ -168,9 +168,10 @@ PHP_RSHUTDOWN_FUNCTION(python)
 PHP_MINFO_FUNCTION(python)
 {
 	php_info_print_table_start();
-	php_info_print_table_row(2, "Python Support", "enabled");
+	php_info_print_table_header(2, "Python Support", "enabled");
 	php_info_print_table_row(2, "Python Version", Py_GetVersion());
-	php_info_print_table_row(2, "Extension Version", "$Revision$");
+	php_info_print_table_row(2, "Extension Version", PHP_PYTHON_VERSION);
+	php_info_print_table_row(2, "CVS Revision", "$Revision$");
 	php_info_print_table_end();
 
 	DISPLAY_INI_ENTRIES();

@@ -30,6 +30,8 @@
 extern zend_module_entry python_module_entry;
 #define phpext_python_ptr &python_module_entry
 
+#define PHP_PYTHON_VERSION "0.8.1-dev"
+
 #ifdef PHP_WIN32
 #define PHP_PYTHON_API __declspec(dllexport)
 #else
