@@ -120,11 +120,10 @@ PHP_MINIT_FUNCTION(python)
 	 */
 	Py_IgnoreEnvironmentFlag = 0;
 	Py_InitializeEx(0);
+	PyEval_InitThreads();
 
-	/*
-	 * Initialize all of our Python modules.
-	 */
-	python_php_init();
+	PyThreadState_Swap(NULL);
+	PyEval_ReleaseLock();
 
 	/*
 	 * At this point, the embedded Python interpreter should be initialized
@@ -137,7 +136,15 @@ PHP_MINIT_FUNCTION(python)
  */
 PHP_MSHUTDOWN_FUNCTION(python)
 {
+	PyThreadState *tstate;
+
 	UNREGISTER_INI_ENTRIES();
+
+	/*
+	 * Create a new thread state so we can run Py_Finalize().  This gives us a
+	 * context in which to run the exit functions.
+	 */
+	tstate = Py_NewInterpreter();
 
 	/*
 	 * Shut down the embedded Python interpreter.  This will destroy all of
@@ -146,6 +153,13 @@ PHP_MSHUTDOWN_FUNCTION(python)
 	 */
 	Py_Finalize();
 
+	/*
+	 * Swap out our temporary state and release our lock.  We're now totally
+	 * done with the Python system.
+	 */
+	PyThreadState_Swap(NULL);
+	PyEval_ReleaseLock();
+
 	return SUCCESS;
 }
 /* }}} */
@@ -153,6 +167,31 @@ PHP_MSHUTDOWN_FUNCTION(python)
  */
 PHP_RINIT_FUNCTION(python)
 {
+	PyThreadState *tstate = NULL;
+
+	PyEval_AcquireLock();
+
+	/*
+	 * Create a new interpreter for this request.  If we fail to do so, we
+	 * can't really proceed, so we throw a fatal error.
+	 */
+	tstate = Py_NewInterpreter();
+	if (!tstate)
+	{
+		php_error(E_ERROR, "Python: Failed to create new interpreter");
+		return FAILURE;
+	}
+
+	/*
+	 * Register all of our Python modules in this interpreter's environment.
+	 */
+	python_php_init();
+
+	PYG(tstate) = tstate;
+
+	PyThreadState_Swap(NULL);
+	PyEval_ReleaseLock();
+
 	return SUCCESS;
 }
 /* }}} */
@@ -160,6 +199,12 @@ PHP_RINIT_FUNCTION(python)
  */
 PHP_RSHUTDOWN_FUNCTION(python)
 {
+	PyThreadState *tstate;
+
+	tstate = PYG(tstate);
+	PyEval_AcquireThread(tstate);
+	Py_EndInterpreter(tstate);
+
 	return SUCCESS;
 }
 /* }}} */
@@ -244,6 +289,8 @@ PHP_FUNCTION(python_construct)
 		return;
 	}
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
 	module = PyImport_ImportModule(module_name);
 	if (module) {
 		PyObject *dict, *class;
@@ -286,6 +333,8 @@ PHP_FUNCTION(python_construct)
 		Py_DECREF(module);
 	} else
 		php_error(E_ERROR, "Python: '%s' is not a valid module", module_name);
+
+	PHP_PYTHON_THREAD_RELEASE();
 }
 /* }}} */
 /* {{{ proto mixed python_eval(string expr)
@@ -300,6 +349,8 @@ PHP_FUNCTION(python_eval)
 		return;
 	}
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
 	/*
 	 * The command will be evaluated in __main__'s context (for both
 	 * globals and locals).  If __main__ doesn't already exist, it will be
@@ -307,6 +358,7 @@ PHP_FUNCTION(python_eval)
 	 */
 	m = PyImport_AddModule("__main__");
 	if (m == NULL) {
+		PHP_PYTHON_THREAD_RELEASE();
 		RETURN_NULL();
 	}
 	d = PyModule_GetDict(m);
@@ -319,6 +371,7 @@ PHP_FUNCTION(python_eval)
 	v = PyRun_String(expr, Py_eval_input, d, d);
 	if (v == NULL) {
 		python_error(E_WARNING);
+		PHP_PYTHON_THREAD_RELEASE();
 		RETURN_NULL();
 	}
 
@@ -334,6 +387,8 @@ PHP_FUNCTION(python_eval)
 		ZVAL_NULL(return_value);
 
 	Py_DECREF(v);
+
+	PHP_PYTHON_THREAD_RELEASE();
 }
 /* }}} */
 /* {{{ proto bool python_exec(string command)
@@ -348,6 +403,8 @@ PHP_FUNCTION(python_exec)
 		return;
 	}
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
 	/*
 	 * The command will be evaluated in __main__'s context (for both
 	 * globals and locals).  If __main__ doesn't already exist, it will be
@@ -355,6 +412,7 @@ PHP_FUNCTION(python_exec)
 	 */
 	m = PyImport_AddModule("__main__");
 	if (m == NULL) {
+		PHP_PYTHON_THREAD_RELEASE();
 		RETURN_NULL();
 	}
 	d = PyModule_GetDict(m);
@@ -367,10 +425,13 @@ PHP_FUNCTION(python_exec)
 	v = PyRun_String(command, Py_file_input, d, d);
 	if (v == NULL) {
 		python_error(E_WARNING);
+		PHP_PYTHON_THREAD_RELEASE();
 		RETURN_FALSE;
 	}
 
 	Py_DECREF(v);
+
+	PHP_PYTHON_THREAD_RELEASE();
 
 	RETURN_TRUE;
 }
@@ -388,6 +449,8 @@ PHP_FUNCTION(python_call)
 							  &function_name, &function_name_len) == FAILURE) {
 		return;
 	}
+
+	PHP_PYTHON_THREAD_ACQUIRE();
 
 	/* Attempt to import the requested module. */
 	module = PyImport_ImportModule(module_name);
@@ -424,6 +487,8 @@ PHP_FUNCTION(python_call)
 	} else {
 		python_error(E_ERROR);
 	}
+
+	PHP_PYTHON_THREAD_RELEASE();
 }
 /* }}} */
 

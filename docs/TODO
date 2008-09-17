@@ -2,7 +2,6 @@ $Id$
 
 Legacy Items from Version 0.7.0
 ===============================
-- multiple interpreters (one per request?)
 - use PyImport_ImportModuleEx() to set globals and locals
 - investigate standard common functions for all imported Python objects
 - allow modules to be manipulated as objects from PHP

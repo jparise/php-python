@@ -7,10 +7,9 @@ $desc = <<<EOT
 This extension allows the Python interpreter to be embedded inside of PHP, allowing for the instantiate and manipulation of Python objects from within PHP.
 EOT;
 
-$version = '0.8.1';
+$version = '0.9.0';
 $notes = <<<EOT
-- The build infrastructure has been overhauled to support a wider range of build environments.  We now use PYTHONHOME and python under Windows and python-config under other operation systems to query the build parameters.
-- The extension should now build against Python 2.4 "out of the box".
+- Each request now has its own, private interpreter state.
 EOT;
 
 $package = new PEAR_PackageFileManager2();

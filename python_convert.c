@@ -27,6 +27,7 @@
 #include "php.h"
 #include "php_python_internal.h"
 
+ZEND_EXTERN_MODULE_GLOBALS(python);
 extern zend_class_entry *python_class_entry;
 
 /* PHP to Python Conversions */
@@ -39,6 +40,8 @@ pip_hash_to_list(zval *hash TSRMLS_DC)
 	PyObject *list;
 	zval **entry;
 	int pos = 0;
+
+	PHP_PYTHON_THREAD_ASSERT();
 
 	/* Make sure we were given a PHP hash. */
 	if (Z_TYPE_P(hash) != IS_ARRAY) {
@@ -70,6 +73,8 @@ pip_hash_to_list(zval *hash TSRMLS_DC)
 PyObject *
 pip_hash_to_tuple(zval *hash TSRMLS_DC)
 {
+	PHP_PYTHON_THREAD_ASSERT();
+
 	return PyList_AsTuple(pip_hash_to_list(hash TSRMLS_CC));
 }
 /* }}} */
@@ -82,6 +87,8 @@ pip_hash_to_dict(zval *hash TSRMLS_DC)
 	zval **entry;
 	char *string_key;
 	long num_key;
+
+	PHP_PYTHON_THREAD_ASSERT();
 
 	/* Make sure we were given a PHP hash. */
 	if (Z_TYPE_P(hash) != IS_ARRAY) {
@@ -131,6 +138,8 @@ pip_zobject_to_pyobject(zval *obj TSRMLS_DC)
 	char *string_key;
 	long num_key;
 
+	PHP_PYTHON_THREAD_ASSERT();
+
 	/*
 	 * At this point, we represent a PHP object as a dictionary of
 	 * its properties.  In the future, we may provide a true object
@@ -177,6 +186,8 @@ PyObject *
 pip_zval_to_pyobject(zval *val TSRMLS_DC)
 {
 	PyObject *ret;
+
+	PHP_PYTHON_THREAD_ASSERT();
 
 	if (val == NULL) {
 		return NULL;
@@ -231,6 +242,8 @@ pip_sequence_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
 	zval *v;
 	int i, size;
 
+	PHP_PYTHON_THREAD_ASSERT();
+
 	/* Make sure this object implements the sequence protocol. */
 	if (!PySequence_Check(o))
 		return FAILURE;
@@ -276,6 +289,8 @@ pip_sequence_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
 int
 pip_sequence_to_array(PyObject *o, zval *zv TSRMLS_DC)
 {
+	PHP_PYTHON_THREAD_ASSERT();
+
 	/*
 	 * Initialize our zval as an array.  The converted sequence will be
 	 * stored in the array's hashtable.
@@ -296,6 +311,8 @@ pip_mapping_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
 	char *name;
 	int i, size, name_len;
 	int status = FAILURE;
+
+	PHP_PYTHON_THREAD_ASSERT();
 
 	/*
 	 * We start by retrieving the list of keys for this mapping.  We will
@@ -388,6 +405,8 @@ pip_mapping_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
 int
 pip_mapping_to_array(PyObject *o, zval *zv TSRMLS_DC)
 {
+	PHP_PYTHON_THREAD_ASSERT();
+
 	if (array_init(zv) == SUCCESS)
 		return pip_mapping_to_hash(o, Z_ARRVAL_P(zv) TSRMLS_CC);
 
@@ -400,6 +419,8 @@ int
 pip_pyobject_to_zobject(PyObject *o, zval *zv TSRMLS_DC)
 {
 	php_python_object *pip;
+
+	PHP_PYTHON_THREAD_ASSERT();
 
 	/* Create a new instance of a PHP Python object. */
 	if (object_init_ex(zv, python_class_entry) != SUCCESS)
@@ -422,6 +443,8 @@ pip_pyobject_to_zobject(PyObject *o, zval *zv TSRMLS_DC)
 int
 pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC)
 {
+	PHP_PYTHON_THREAD_ASSERT();
+
 	/*
 	 * The general approach taken below is to infer the Python object's type
 	 * using a series of tests based on Python's type-specific _Check()
@@ -518,6 +541,8 @@ pip_args_to_tuple(int argc, int start TSRMLS_DC)
 	zval ***zargs;
 	int i;
 
+	PHP_PYTHON_THREAD_ASSERT();
+
 	if (argc < start)
 		return NULL;
 
@@ -557,10 +582,12 @@ pip_args_to_tuple(int argc, int start TSRMLS_DC)
 /* {{{ python_str(PyObject *o, char **buffer, int *length)
    Returns the NUL-terminated string representation of a Python object. */
 int
-python_str(PyObject *o, char **buffer, int *length)
+python_str(PyObject *o, char **buffer, int *length TSRMLS_DC)
 {
 	PyObject *str;
 	int ret = -1;
+
+	PHP_PYTHON_THREAD_ASSERT();
 
 	/*
 	 * Compute the string representation of the given object.  This is the

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package packagerversion="1.7.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
+<package packagerversion="1.6.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
     http://pear.php.net/dtd/tasks-1.0.xsd
     http://pear.php.net/dtd/package-2.0
     http://pear.php.net/dtd/package-2.0.xsd">
@@ -13,10 +13,10 @@
   <email>jon@php.net</email>
   <active>yes</active>
  </lead>
- <date>2008-03-03</date>
- <time>23:43:55</time>
+ <date>2008-09-16</date>
+ <time>22:33:27</time>
  <version>
-  <release>0.8.1</release>
+  <release>0.9.0</release>
   <api>0.6.0</api>
  </version>
  <stability>
@@ -24,8 +24,7 @@
   <api>alpha</api>
  </stability>
  <license>MIT License</license>
- <notes>- The unix build infrastructure has been overhauled to support a wider range of build environments.  We now use python-config to query the build parameters.
-- The extension should now build against Python 2.4 &quot;out of the box&quot;.</notes>
+ <notes>- Each request now has its own, private interpreter state.</notes>
  <contents>
   <dir baseinstalldir="/" name="/">
    <dir name="docs">
@@ -80,6 +79,19 @@
  <providesextension>python</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <version>
+    <release>0.9.0</release>
+    <api>0.6.0</api>
+   </version>
+   <stability>
+    <release>alpha</release>
+    <api>alpha</api>
+   </stability>
+   <date>2008-09-16</date>
+   <license>MIT License</license>
+   <notes>- Each request now has its own, private interpreter state.</notes>
+  </release>
   <release>
    <version>
     <release>0.8.1</release>

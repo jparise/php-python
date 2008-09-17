@@ -33,6 +33,7 @@
 #include "php.h"
 #include "php_python_internal.h"
 
+ZEND_EXTERN_MODULE_GLOBALS(python);
 extern zend_object_handlers python_object_handlers;
 
 /* {{{ python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC)
@@ -43,7 +44,9 @@ python_object_destroy(void *object, zend_object_handle handle TSRMLS_DC)
 	php_python_object *pip = (php_python_object *)object;
 
 	/* Release our reference to this Python object. */
+	PHP_PYTHON_THREAD_ACQUIRE();
 	Py_XDECREF(pip->object);
+	PHP_PYTHON_THREAD_RELEASE();
 
 	/* Destroy our base object, too. */ 
 	zend_object_std_dtor(&pip->base TSRMLS_CC);
@@ -78,7 +81,9 @@ python_object_clone(void *object, void **clone_ptr TSRMLS_DC)
 	memcpy(clone, orig, sizeof(php_python_object));
 
 	/* Add a new reference to the cloned (copied) Python object. */
+	PHP_PYTHON_THREAD_ACQUIRE();
 	Py_INCREF(clone->object);
+	PHP_PYTHON_THREAD_RELEASE();
 
 	*clone_ptr = clone;
 }
@@ -115,13 +120,15 @@ python_object_create(zend_class_entry *ce TSRMLS_DC)
 }
 /* }}} */
 
-/* {{{ python_num_args(PyObject *callable)
+/* {{{ python_num_args(PyObject *callable TSRMLS_DC)
    Returns the number of arguments expected by the given callable object. */
 zend_uint
-python_num_args(PyObject *callable)
+python_num_args(PyObject *callable TSRMLS_DC)
 {
 	PyObject *func_code, *co_argcount;
 	zend_uint num_args = 0;
+
+	PHP_PYTHON_THREAD_ACQUIRE();
 
 	if (func_code = PyObject_GetAttrString(callable, "func_code")) {
 		if (co_argcount = PyObject_GetAttrString(func_code, "co_argcount")) {
@@ -131,20 +138,27 @@ python_num_args(PyObject *callable)
 		Py_DECREF(func_code);
 	}
 
+	PHP_PYTHON_THREAD_RELEASE();
+
 	return num_args;
 }
 /* }}} */
-/* {{{ python_get_arg_info(PyObject *callable, zend_arg_info *arg_info)
+/* {{{ python_get_arg_info(PyObject *callable, zend_arg_info *arg_info TSRMLS_DC)
    Fills out the arg_info array and returns the total number of arguments. */
 zend_uint
-python_get_arg_info(PyObject *callable, zend_arg_info **arg_info)
+python_get_arg_info(PyObject *callable, zend_arg_info **arg_info TSRMLS_DC)
 {
 	PyObject *func_code, *co_varnames;
 	zend_uint num_args = 0;
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
 	/* Make sure that we've been passed a valid, callable object. */
 	if (!callable || PyCallable_Check(callable) == 0)
+	{
+		PHP_PYTHON_THREAD_RELEASE();
 		return 0;
+	}
 
 	/*
 	 * The arguments are described by the object's func_code.co_varnames
@@ -189,6 +203,8 @@ python_get_arg_info(PyObject *callable, zend_arg_info **arg_info)
 		}
 		Py_DECREF(func_code);
 	}
+
+	PHP_PYTHON_THREAD_RELEASE();
 
 	return num_args;
 }

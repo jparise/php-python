@@ -48,6 +48,16 @@
 	#define Py_ssize_t ssize_t
 #endif
 
+ZEND_BEGIN_MODULE_GLOBALS(python)
+    PyThreadState *tstate;
+ZEND_END_MODULE_GLOBALS(python)
+
+#ifdef ZTS
+#define PYG(v) TSRMG(python_globals_id, zend_python_globals *, v)
+#else
+#define PYG(v) (python_globals.v)
+#endif
+
 typedef struct _php_python_object {
 	zend_object			base;
 	PyObject *			object;
@@ -55,13 +65,16 @@ typedef struct _php_python_object {
 } php_python_object;
 
 #define PHP_PYTHON_FETCH(name, zv) php_python_object *name = (php_python_object *)zend_object_store_get_object(zv TSRMLS_CC)
+#define PHP_PYTHON_THREAD_ASSERT() assert(PyThreadState_GET() == PYG(tstate))
+#define PHP_PYTHON_THREAD_ACQUIRE() PyEval_AcquireThread(PYG(tstate))
+#define PHP_PYTHON_THREAD_RELEASE() PyEval_ReleaseThread(PyThreadState_GET())
 
 /* Python Modules */
 int python_php_init(); 
 
 /* PHP Object API */
 zend_object_value python_object_create(zend_class_entry *ce TSRMLS_DC);
-zend_uint python_get_arg_info(PyObject *callable, zend_arg_info **arg_info);
+zend_uint python_get_arg_info(PyObject *callable, zend_arg_info **arg_info TSRMLS_DC) ;
 
 /* PHP to Python Conversion */
 PyObject * pip_hash_to_list(zval *hash TSRMLS_DC);
@@ -82,6 +95,6 @@ int pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC);
 PyObject * pip_args_to_tuple(int argc, int start TSRMLS_DC);
 
 /* Object Representations */
-int python_str(PyObject *o, char **buffer, int *length);
+int python_str(PyObject *o, char **buffer, int *length TSRMLS_DC);
 
 #endif /* PHP_PYTHON_INTERNAL_H */

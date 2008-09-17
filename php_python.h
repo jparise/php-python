@@ -55,14 +55,4 @@ PHP_FUNCTION(python_eval);
 PHP_FUNCTION(python_exec);
 PHP_FUNCTION(python_call);
 
-ZEND_BEGIN_MODULE_GLOBALS(python)
-	zend_bool dummy;
-ZEND_END_MODULE_GLOBALS(python)
-
-#ifdef ZTS
-#define PYG(v) TSRMG(python_globals_id, zend_python_globals *, v)
-#else
-#define PYG(v) (python_globals.v)
-#endif
-
 #endif /* PHP_PYTHON_H */

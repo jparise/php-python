@@ -31,6 +31,8 @@
 #include "php.h"
 #include "php_python_internal.h"
 
+ZEND_EXTERN_MODULE_GLOBALS(python);
+
 /* Helpers */
 /* {{{ efree_function(zend_internal_function *func)
    Frees the memory allocated to a zend_internal_function structure. */
@@ -63,6 +65,8 @@ merge_class_dict(PyObject *o, HashTable *ht TSRMLS_DC)
 {
 	PyObject *d;
 	PyObject *bases;
+
+	PHP_PYTHON_THREAD_ASSERT();
 
 	/* We assume that the Python object is a class type. */
 	assert(PyClass_Check(o));
@@ -126,6 +130,8 @@ get_properties(PyObject *o, HashTable *ht TSRMLS_DC)
 	PyObject *attr;
 	int status;
 
+	PHP_PYTHON_THREAD_ASSERT();
+
 	/*
 	 * If the object supports the sequence or mapping protocol, just copy
 	 * the container's contents into the output hashtable.
@@ -185,6 +191,8 @@ python_read_property(zval *object, zval *member, int type TSRMLS_DC)
 	zval *return_value = NULL;
 	PyObject *attr;
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
 	convert_to_string_ex(&member);
 
 	attr = PyObject_GetAttrString(pip->object, Z_STRVAL_P(member));
@@ -197,6 +205,8 @@ python_read_property(zval *object, zval *member, int type TSRMLS_DC)
 
 	/* TODO: Do something with the 'type' parameter? */
 
+	PHP_PYTHON_THREAD_RELEASE();
+
 	return return_value;
 }
 /* }}} */
@@ -207,6 +217,8 @@ python_write_property(zval *object, zval *member, zval *value TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
 	PyObject *val;
+
+	PHP_PYTHON_THREAD_ACQUIRE();
 	
 	val = pip_zval_to_pyobject(value TSRMLS_CC);
 	if (val) {
@@ -217,6 +229,8 @@ python_write_property(zval *object, zval *member, zval *value TSRMLS_DC)
 					  Z_STRVAL_P(member));
 		}
 	}
+
+	PHP_PYTHON_THREAD_RELEASE();
 }
 /* }}} */
 /* {{{ python_read_dimension(zval *object, zval *offset, int type TSRMLS_DC)
@@ -227,6 +241,8 @@ python_read_dimension(zval *object, zval *offset, int type TSRMLS_DC)
 	PHP_PYTHON_FETCH(pip, object);
 	zval *return_value = NULL;
 	PyObject *item = NULL;
+
+	PHP_PYTHON_THREAD_ACQUIRE();
 
 	/*
 	 * If we've been given a numeric value, start by attempting to use the
@@ -254,6 +270,8 @@ python_read_dimension(zval *object, zval *offset, int type TSRMLS_DC)
 
 	/* TODO: Do something with the 'type' parameter? */
 
+	PHP_PYTHON_THREAD_RELEASE();
+
 	return return_value;
 }
 /* }}} */
@@ -263,7 +281,11 @@ static void
 python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
-	PyObject *val = pip_zval_to_pyobject(value TSRMLS_CC);
+	PyObject *val;
+
+	PHP_PYTHON_THREAD_ACQUIRE();
+
+	val = pip_zval_to_pyobject(value TSRMLS_CC);
 
 	/*
 	 * If this offset is a numeric value, we'll start by attempting to use
@@ -291,6 +313,8 @@ python_write_dimension(zval *object, zval *offset, zval *value TSRMLS_DC)
 	}
 
 	Py_XDECREF(val);
+
+	PHP_PYTHON_THREAD_RELEASE();
 }
 /* }}} */
 /* {{{ python_property_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
@@ -300,9 +324,12 @@ python_property_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
 	PyObject *attr;
+	int exists = 0;
 
 	/* We're only concerned with the string representation of this value. */
 	convert_to_string_ex(&member);
+
+	PHP_PYTHON_THREAD_ACQUIRE();
 
 	/*
 	 * If check_empty is specified, we need to check whether or not the
@@ -313,15 +340,22 @@ python_property_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 	if (check_empty) {
 		attr = PyObject_GetAttrString(pip->object, Z_STRVAL_P(member));
 		if (attr) {
-			int ret = (PyObject_IsTrue(attr) == 1);
+			exists = (PyObject_IsTrue(attr) == 1);
 			Py_DECREF(attr);
-			return ret;
 		} else
 			PyErr_Clear();
+
+		PHP_PYTHON_THREAD_RELEASE();
+
+		return exists;
 	}
 
 	/* Otherwise, just check for the existence of the attribute. */
-	return PyObject_HasAttrString(pip->object, Z_STRVAL_P(member)) ? 1 : 0;
+	exists = PyObject_HasAttrString(pip->object, Z_STRVAL_P(member)) ? 1 : 0;
+
+	PHP_PYTHON_THREAD_RELEASE();
+
+	return exists;
 }
 /* }}} */
 /* {{{ python_dimension_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
@@ -332,6 +366,8 @@ python_dimension_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 	PHP_PYTHON_FETCH(pip, object);
 	PyObject *item = NULL;
 	int ret = 0;
+
+	PHP_PYTHON_THREAD_ACQUIRE();
 
 	/*
 	 * If we've been handed an integer value, check if this is a valid item
@@ -363,6 +399,8 @@ python_dimension_exists(zval *object, zval *member, int check_empty TSRMLS_DC)
 	} else
 		PyErr_Clear();
 
+	PHP_PYTHON_THREAD_RELEASE();
+
 	return ret;
 }
 /* }}} */
@@ -373,12 +411,16 @@ python_property_delete(zval *object, zval *member TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
 	convert_to_string_ex(&member);
 	if (PyObject_DelAttrString(pip->object, Z_STRVAL_P(member)) == -1) {
 		PyErr_Clear();
 		php_error(E_ERROR, "Python: Failed to delete attribute '%s'",
 				  Z_STRVAL_P(member));
 	}
+
+	PHP_PYTHON_THREAD_RELEASE();
 }
 /* }}} */
 /* {{{ python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
@@ -388,6 +430,8 @@ python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
 	int deleted = 0;
+
+	PHP_PYTHON_THREAD_ACQUIRE();
 
 	/*
 	 * If we've been given a numeric offset and this object provides the
@@ -410,6 +454,8 @@ python_dimension_delete(zval *object, zval *offset TSRMLS_DC)
 		PyErr_Clear();
 		php_error(E_ERROR, "Python: Failed to delete item");
 	}
+
+	PHP_PYTHON_THREAD_RELEASE();
 }
 /* }}} */
 /* {{{ python_get_properties(zval *object TSRMLS_DC)
@@ -419,8 +465,12 @@ python_get_properties(zval *object TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
 	if (zend_hash_num_elements(pip->base.properties) == 0)
 		get_properties(pip->object, pip->base.properties TSRMLS_CC);
+
+	PHP_PYTHON_THREAD_RELEASE();
 
     return pip->base.properties;
 }
@@ -434,14 +484,19 @@ python_get_method(zval **object_ptr, char *method, int method_len TSRMLS_DC)
 	zend_internal_function *f;
 	PyObject *func;
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
 	/* Quickly check if this object has a method with the requested name. */
-	if (PyObject_HasAttrString(pip->object, method) == 0)
+	if (PyObject_HasAttrString(pip->object, method) == 0) {
+		PHP_PYTHON_THREAD_RELEASE();
 		return NULL;
+	}
 
 	/* Attempt to fetch the requested method and verify that it's callable. */
 	func = PyObject_GetAttrString(pip->object, method);
 	if (!func || PyMethod_Check(func) == 0 || PyCallable_Check(func) == 0) {
 		Py_XDECREF(func);
+		PHP_PYTHON_THREAD_RELEASE();
 		return NULL;
 	}
 
@@ -457,9 +512,11 @@ python_get_method(zval **object_ptr, char *method, int method_len TSRMLS_DC)
 	f->fn_flags = 0;
 	f->prototype = NULL;
 	f->pass_rest_by_reference = 0;
-	f->num_args = python_get_arg_info(func, &(f->arg_info));
+	f->num_args = python_get_arg_info(func, &(f->arg_info) TSRMLS_CC);
 
 	Py_DECREF(func);
+
+	PHP_PYTHON_THREAD_RELEASE();
 
 	return (union _zend_function *)f;
 }
@@ -472,6 +529,8 @@ python_call_method(char *method_name, INTERNAL_FUNCTION_PARAMETERS)
 	PHP_PYTHON_FETCH(pip, getThis());
 	PyObject *method;
 	int ret = FAILURE;
+
+	PHP_PYTHON_THREAD_ACQUIRE();
 
 	/* Get a pointer to the requested method from this object. */
 	method = PyObject_GetAttrString(pip->object, method_name);
@@ -499,6 +558,8 @@ python_call_method(char *method_name, INTERNAL_FUNCTION_PARAMETERS)
 
 	/* Release the memory that we allocated for this function in method_get. */
 	efree_function((zend_internal_function *)EG(function_state_ptr)->function);
+
+	PHP_PYTHON_THREAD_RELEASE();
 
 	return ret;
 }
@@ -531,6 +592,8 @@ python_get_class_name(zval *object, char **class_name,
 	const char * const key = (parent) ? "__module__" : "__class__";
 	PyObject *attr, *str;
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
 	/* Start off with some safe initial values. */
 	*class_name = NULL;
 	*class_name_len = 0;
@@ -558,6 +621,8 @@ python_get_class_name(zval *object, char **class_name,
 		*class_name_len = pip->ce->name_length;
 	}
 
+	PHP_PYTHON_THREAD_RELEASE();
+
 	return SUCCESS;
 }
 /* }}} */
@@ -568,8 +633,13 @@ python_compare(zval *object1, zval *object2 TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(a, object1);
 	PHP_PYTHON_FETCH(b, object2);
+	int cmp;
 
-	return PyObject_Compare(a->object, b->object);
+	PHP_PYTHON_THREAD_ACQUIRE();
+	cmp = PyObject_Compare(a->object, b->object);
+	PHP_PYTHON_THREAD_RELEASE();
+
+	return cmp;
 }
 /* }}} */
 /* {{{ python_cast(zval *readobj, zval *writeobj, int type TSRMLS_DC)
@@ -580,6 +650,8 @@ python_cast(zval *readobj, zval *writeobj, int type TSRMLS_DC)
 	PHP_PYTHON_FETCH(pip, readobj);
 	PyObject *val = NULL;
 	int ret = FAILURE;
+
+	PHP_PYTHON_THREAD_ACQUIRE();
 
 	switch (type) {
 		case IS_STRING:
@@ -594,6 +666,8 @@ python_cast(zval *readobj, zval *writeobj, int type TSRMLS_DC)
 		Py_DECREF(val);
 	}
 
+	PHP_PYTHON_THREAD_RELEASE();
+
 	return ret;
 }
 /* }}} */
@@ -605,14 +679,19 @@ static int
 python_count_elements(zval *object, long *count TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
-	int len = PyObject_Length(pip->object);
+	int len, result = FAILURE;
 
+	PHP_PYTHON_THREAD_ACQUIRE();
+
+	len = PyObject_Length(pip->object);
 	if (len != -1) {
 		*count = len;
-		return SUCCESS;
+		result = SUCCESS;
 	}
 
-	return FAILURE;
+	PHP_PYTHON_THREAD_RELEASE();
+
+	return result;
 }
 /* }}} */
 
