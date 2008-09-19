@@ -235,13 +235,15 @@ PHP_MINFO_FUNCTION(python)
 }
 /* }}} */
 
-/* {{{ python_error(int error_type)
+/* {{{ python_error(int error_type TSRMLS_DC)
  */
 static void
-python_error(int error_type)
+python_error(int error_type TSRMLS_DC)
 {
 	PyObject *ptype, *pvalue, *ptraceback;
 	PyObject *type, *value;
+
+	PHP_PYTHON_THREAD_ASSERT();
 
 	/* Fetch the last error and store the type and value as strings. */
 	PyErr_Fetch(&ptype, &pvalue, &ptraceback);
@@ -265,7 +267,13 @@ python_error(int error_type)
    Returns the Python interpreter's version as a string. */
 PHP_FUNCTION(python_version)
 {
-	RETURN_STRING((char *)Py_GetVersion(), 0);
+	const char *version;
+
+	PHP_PYTHON_THREAD_ACQUIRE();
+	version = Py_GetVersion();
+	PHP_PYTHON_THREAD_RELEASE();
+
+	RETURN_STRING((char *)version, 0);
 }
 /* }}} */
 
@@ -322,7 +330,7 @@ PHP_FUNCTION(python_construct)
 				Py_DECREF(args);
 
 			if (pip->object == NULL)
-				python_error(E_ERROR);
+				python_error(E_ERROR TSRMLS_CC);
 
 			/* Our new object should be an instance of the requested class. */
 			assert(PyObject_IsInstance(pip->object, class));
@@ -370,7 +378,7 @@ PHP_FUNCTION(python_eval)
 	 */
 	v = PyRun_String(expr, Py_eval_input, d, d);
 	if (v == NULL) {
-		python_error(E_WARNING);
+		python_error(E_WARNING TSRMLS_CC);
 		PHP_PYTHON_THREAD_RELEASE();
 		RETURN_NULL();
 	}
@@ -424,7 +432,7 @@ PHP_FUNCTION(python_exec)
 	 */
 	v = PyRun_String(command, Py_file_input, d, d);
 	if (v == NULL) {
-		python_error(E_WARNING);
+		python_error(E_WARNING TSRMLS_CC);
 		PHP_PYTHON_THREAD_RELEASE();
 		RETURN_FALSE;
 	}
@@ -478,14 +486,14 @@ PHP_FUNCTION(python_call)
 				pip_pyobject_to_zval(result, return_value TSRMLS_CC);
 				Py_DECREF(result);
 			} else {
-				python_error(E_ERROR);
+				python_error(E_ERROR TSRMLS_CC);
 			}
 		} else {
-			python_error(E_ERROR);
+			python_error(E_ERROR TSRMLS_CC);
 		}
 		Py_DECREF(module);
 	} else {
-		python_error(E_ERROR);
+		python_error(E_ERROR TSRMLS_CC);
 	}
 
 	PHP_PYTHON_THREAD_RELEASE();
