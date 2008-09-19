@@ -13,10 +13,10 @@
   <email>jon@php.net</email>
   <active>yes</active>
  </lead>
- <date>2008-09-16</date>
- <time>22:33:27</time>
+ <date>2008-09-18</date>
+ <time>23:30:10</time>
  <version>
-  <release>0.9.0</release>
+  <release>0.9.0a</release>
   <api>0.6.0</api>
  </version>
  <stability>
@@ -28,6 +28,7 @@
  <contents>
   <dir baseinstalldir="/" name="/">
    <dir name="docs">
+    <file name="internals.txt" role="doc" />
     <file name="TODO" role="doc" />
    </dir> <!-- /docs -->
    <dir name="examples">
@@ -51,6 +52,7 @@
     <file name="python_call.phpt" role="test" />
     <file name="python_eval.phpt" role="test" />
     <file name="python_exec.phpt" role="test" />
+    <file name="python_version.phpt" role="test" />
     <file name="TestModule.py" role="test" />
    </dir> <!-- /tests -->
    <file name="config.m4" role="src" />
@@ -79,6 +81,19 @@
  <providesextension>python</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <version>
+    <release>0.9.0a</release>
+    <api>0.6.0</api>
+   </version>
+   <stability>
+    <release>alpha</release>
+    <api>alpha</api>
+   </stability>
+   <date>2008-09-18</date>
+   <license>MIT License</license>
+   <notes>- Each request now has its own, private interpreter state.</notes>
+  </release>
   <release>
    <version>
     <release>0.9.0</release>

@@ -7,7 +7,7 @@ $desc = <<<EOT
 This extension allows the Python interpreter to be embedded inside of PHP, allowing for the instantiate and manipulation of Python objects from within PHP.
 EOT;
 
-$version = '0.9.0';
+$version = '0.9.0a';
 $notes = <<<EOT
 - Each request now has its own, private interpreter state.
 EOT;
