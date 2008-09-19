@@ -1,0 +1,81 @@
+==========================
+ Python in PHP: Internals
+==========================
+
+:Author:    Jon Parise
+:Contact:   jon@php.net
+:Date:      $Date$
+:Revision:  $Revision$
+
+.. contents:: Contents
+   :depth: 2
+
+.. section-numbering::
+
+Embedded Python
+===============
+
+Thread State
+------------
+The Python in PHP extension uses Python's native thread state API to manage
+thread state within the process's main Python interpreter.
+
+Each PHP request has its own, private Python sub-interpreter.  This
+interpreter and its associated thread state is created at the start of the
+request via a call to `Py_NewInterpreter()`_.  The interpreter's thread state
+is stored in a request global for access throughout the lifetime of the
+request.  When the request is shut down, the interpreter and thread state are
+destroyed via a call to `Py_EndInterpreter()`_.
+
+The request's sub-interpreter is a private execution environment within the
+process's main Python interpreter.  This means that each request's interpreter
+has its own, unique set of imported modules (including ``__builtin__``,
+``__main__``, and ``sys``).  It also means that state from one request's
+Python environment won't "leak" into other requests' environments.
+
+Whenever the Python extension accesses Python's C API, it must first acquire
+the current request's thread state.  Once it's done interacting with the
+Python C API, the thread state is released.  These operations are handled by
+the ``PHP_PYTHON_THREAD_ACQUIRE()`` and ``PHP_PYTHON_THREAD_RELEASE()``
+macros::
+
+    PHP_FUNCTION(python_version)
+    {
+        const char *version;
+
+        PHP_PYTHON_THREAD_ACQUIRE();
+        version = Py_GetVersion();
+        PHP_PYTHON_THREAD_RELEASE();
+
+        RETURN_STRING((char *)version, 0);
+    }
+
+Some of the extension's internal helper functions (notably, the type
+conversion functions) also require the thread state to be held while they
+access the Python C API.  These functions simply assert that the appropriate
+thread state has already been acquired by their calling context.
+
+::
+
+    int pyobject_to_zval_string(PyObject *o, zval *zv TSRMLS_DC)
+    {
+        PHP_PYTHON_THREAD_ASSERT();
+
+        if (PyString_Check(o)) {
+            ZVAL_STRINGL(zv, PyString_AS_STRING(o), PyString_GET_SIZE(o), 1);
+            return SUCCESS;
+        }
+
+        return FAILURE;
+    }
+
+Note that calls to ``PHP_PYTHON_THREAD_ACQUIRE()`` and
+``PHP_PYTHON_THREAD_RELEASE()`` **do not** nest.  Also, failure to release
+thread state after it is acquire may lead to unexpected behavior.  It is
+important to ensure that ``PHP_PYTHON_THREAD_RELEASE()`` is called by all code
+paths that exit a function while the thread state is still being held.
+
+.. _Py_NewInterpreter(): http://docs.python.org/dev/c-api/init.html#Py_NewInterpreter
+.. _Py_EndInterpreter(): http://docs.python.org/dev/c-api/init.html#Py_EndInterpreter
+
+.. vim: tabstop=4 shiftwidth=4 softtabstop=4 expandtab textwidth=78 ft=rst:
