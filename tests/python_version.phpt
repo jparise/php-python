@@ -6,4 +6,4 @@ Python: python_version()
 <?php
 echo python_version();
 --EXPECTREGEX--
-\d\.\d\.\d \(.*\) \[.*\]
+\d\.\d\.\d \(.*\)\s+\[.*\]
