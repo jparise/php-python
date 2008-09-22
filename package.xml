@@ -13,8 +13,8 @@
   <email>jon@php.net</email>
   <active>yes</active>
  </lead>
- <date>2008-09-18</date>
- <time>23:30:10</time>
+ <date>2008-09-21</date>
+ <time>19:35:04</time>
  <version>
   <release>0.9.0a</release>
   <api>0.6.0</api>
@@ -24,7 +24,8 @@
   <api>alpha</api>
  </stability>
  <license>MIT License</license>
- <notes>- Each request now has its own, private interpreter state.</notes>
+ <notes>- Each request now has its own, private interpreter state.
+- The new &quot;python.optimize&quot; INI setting controls Python&apos;s optimization level.</notes>
  <contents>
   <dir baseinstalldir="/" name="/">
    <dir name="docs">
@@ -90,9 +91,10 @@
     <release>alpha</release>
     <api>alpha</api>
    </stability>
-   <date>2008-09-18</date>
+   <date>2008-09-21</date>
    <license>MIT License</license>
-   <notes>- Each request now has its own, private interpreter state.</notes>
+   <notes>- Each request now has its own, private interpreter state.
+- The new &quot;python.optimize&quot; INI setting controls Python&apos;s optimization level.</notes>
   </release>
   <release>
    <version>

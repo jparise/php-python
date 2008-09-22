@@ -10,6 +10,7 @@ EOT;
 $version = '0.9.0a';
 $notes = <<<EOT
 - Each request now has its own, private interpreter state.
+- The new "python.optimize" INI setting controls Python's optimization level.
 EOT;
 
 $package = new PEAR_PackageFileManager2();

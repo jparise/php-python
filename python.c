@@ -88,6 +88,7 @@ zend_internal_function php_python_constructor = {
 /* {{{ PHP_INI
  */
 PHP_INI_BEGIN()
+PHP_INI_ENTRY("python.optimize", "0", PHP_INI_SYSTEM, NULL)
 PHP_INI_END()
 /* }}} */
 
@@ -115,10 +116,16 @@ PHP_MINIT_FUNCTION(python)
 	python_class_entry->constructor = (zend_function *)&php_python_constructor;
 
 	/*
-	 * Initialize the embedded Python interpreter.  Note that we skip signal
-	 * handler registration to avoid interfering with PHP's handlers.
+	 * We need to set up any flags before we initialize Python.  Note that we
+	 * always skip signal handler registration to avoid interfering with PHP's
+	 * handlers.
 	 */
+	Py_OptimizeFlag = INI_INT("python.optimize");
 	Py_IgnoreEnvironmentFlag = 0;
+
+	/*
+	 * Initialize the embedded Python interpreter and its threading subsystem.
+	 */
 	Py_InitializeEx(0);
 	PyEval_InitThreads();
 
