@@ -1,0 +1,41 @@
+===============
+ Python in PHP
+===============
+
+-------------
+ Users Guide
+-------------
+
+:Author:    Jon Parise
+:Contact:   jon@php.net
+:Date:      $Date$
+:Revision:  $Revision$
+
+.. contents:: Contents
+   :depth: 2
+
+.. section-numbering::
+
+Configuration
+=============
+
+INI Settings
+------------
+
+python.optimize
+~~~~~~~~~~~~~~~
+The ``python.optimize`` INI setting controls the Python interpreter's runtime
+optimization level.  This is a global, system-wide setting and therefore can
+only be set in the PHP.ini file.
+
+When set to **0** (the default), no additional optimizations are enabled, and
+the built-in ``__debug__`` flag is True.
+
+When set to **1** (equivalent to Python's ``-O`` command line option), the
+Python interpreter will generate optimized bytecode, and the built-in
+``__debug__`` flag is set to False.
+
+When set to **2** (equivalent to Python's ``-OO`` command line option), the
+Python doc-strings will be removed in addition to the above optimizations.
+
+.. vim: tabstop=4 shiftwidth=4 softtabstop=4 expandtab textwidth=78 ft=rst:
