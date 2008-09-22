@@ -110,6 +110,9 @@ PHP_MINIT_FUNCTION(python)
 	ZEND_INIT_MODULE_GLOBALS(python, python_init_globals, NULL);
 	REGISTER_INI_ENTRIES();
 
+	REGISTER_STRING_CONSTANT("PHP_PYTHON_VERSION", PHP_PYTHON_VERSION,
+						     CONST_CS | CONST_PERSISTENT);
+
 	INIT_CLASS_ENTRY(ce, "Python", NULL);
 	python_class_entry = zend_register_internal_class(&ce TSRMLS_CC);
 	python_class_entry->create_object = python_object_create;

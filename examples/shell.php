@@ -1,6 +1,7 @@
 <?php
 
-echo 'Python in PHP (' . python_version() . ")\n";
+echo "Python in PHP (" . PHP_PYTHON_VERSION . ")\n";
+echo python_version() . "\n";
 
 $stdin = fopen('php://stdin', 'r');
 
