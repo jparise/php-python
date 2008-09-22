@@ -236,7 +236,7 @@ PHP_MINFO_FUNCTION(python)
 	php_info_print_table_start();
 	php_info_print_table_header(1, "Python Copyright");
 	php_info_print_box_start(0);
-	php_printf("%s", Py_GetCopyright());
+	php_printf("%s\n", Py_GetCopyright());
 	php_info_print_box_end();
 	php_info_print_table_end();
 }
