@@ -430,7 +430,7 @@ PHP_FUNCTION(python_exec)
 	m = PyImport_AddModule("__main__");
 	if (m == NULL) {
 		PHP_PYTHON_THREAD_RELEASE();
-		RETURN_NULL();
+		RETURN_FALSE;
 	}
 	d = PyModule_GetDict(m);
 
