@@ -16,8 +16,64 @@
 
 .. section-numbering::
 
-Configuration
-=============
+Overview
+========
+
+Requirements
+------------
+The Python extension has the following system requirements:
+
+- `PHP`_ version 5.2.0 or later
+- `PEAR`_ installer version 1.4.3 or later
+
+.. _PHP: http://www.php.net/
+.. _PEAR: http://pear.php.net/
+
+Installation
+------------
+The easiest way to install the Perforce extension is by using the PECL
+installer::
+
+    pecl install python
+
+If you're building from source code, should use the ``--with-python``
+configuration option.  If your copy of the Python hasn't been installed in one
+of the default locations, you can specify it as a parameter::
+
+    --with-python=/opt/python
+
+More detailed information on installing PECL packages in general can be found
+in the `Installation of PECL Extensions`_ section of the `PHP Manual`_.
+
+.. _Installation of PECL Extensions: http://www.php.net/manual/install.pecl.php
+.. _PHP Manual: http://www.php.net/manual/
+
+Source Code
+-----------
+This package's source code is hosted the `PHP CVS repository`_.  To check out
+a read-only (anonymous) copy of the source code, start by logging in to the
+PHP CVS server.  The password for the ``cvsread`` account is ``phpfi``.
+
+::
+
+    cvs -d :pserver:cvsread@cvs.php.net:/repository login
+
+Then you'll be able to check out the Python's extension's source code::
+
+    cvs -d :pserver:cvsread@cvs.php.net:/repository co -d python pecl/python
+
+A number of unit tests are included to help maintain correct and expected
+behavior.  The tests can be run using PECL tool's ``run-tests`` command::
+
+    pecl run-tests -p python
+
+Additional unit test contributions are welcome, especially when they increase
+code coverage or exercise specific use cases.
+
+.. _PHP CVS repository: http://www.php.net/anoncvs.php
+
+Usage
+=====
 
 INI Settings
 ------------
