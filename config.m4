@@ -65,5 +65,5 @@ if test "$PHP_PYTHON" != "no"; then
     PHP_EVAL_LIBLINE($PYTHON_LDFLAGS, PYTHON_SHARED_LIBADD)
     PHP_SUBST(PYTHON_SHARED_LIBADD)
 
-    PHP_NEW_EXTENSION(python, python.c python_convert.c python_handlers.c python_object.c python_php.c, $ext_shared)
+    PHP_NEW_EXTENSION(python, python.c python_convert.c python_handlers.c python_object.c python_php.c python_streams.c, $ext_shared)
 fi

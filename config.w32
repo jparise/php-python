@@ -41,7 +41,7 @@ if (PHP_PYTHON != "no") {
 			|| !CHECK_LIB(libname, "python", PYTHON_LIBPATH)) {
 			WARNING("Python not enabled; libraries and headers not found");
 		} else {
-			EXTENSION("python", "python.c python_convert.c python_handlers.c python_object.c python_php.c", PHP_PYTHON_SHARED, "/D PYTHON_EXPORTS");
+			EXTENSION("python", "python.c python_convert.c python_handlers.c python_object.c python_php.c python_streams.c", PHP_PYTHON_SHARED, "/D PYTHON_EXPORTS");
 			AC_DEFINE("HAVE_PYTHON", 1);
 		}
 	}

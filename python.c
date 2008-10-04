@@ -132,6 +132,8 @@ PHP_MINIT_FUNCTION(python)
 	Py_InitializeEx(0);
 	PyEval_InitThreads();
 
+	python_streams_init();
+
 	PyThreadState_Swap(NULL);
 	PyEval_ReleaseLock();
 
@@ -193,12 +195,21 @@ PHP_RINIT_FUNCTION(python)
 	}
 
 	/*
+	 * Intercept Python's stdout and stderr streams and install appropriate
+	 * PHP handlers.
+	 */
+	python_streams_intercept();
+
+	/*
 	 * Register all of our Python modules in this interpreter's environment.
 	 */
 	python_php_init();
 
+	/*
+	 * Save our thread state in a global variable and release our lock.  This
+	 * request's Python environment is now set up and ready to use.
+	 */
 	PYG(tstate) = tstate;
-
 	PyThreadState_Swap(NULL);
 	PyEval_ReleaseLock();
 

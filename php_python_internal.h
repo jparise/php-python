@@ -69,6 +69,10 @@ typedef struct _php_python_object {
 #define PHP_PYTHON_THREAD_ACQUIRE() PyEval_AcquireThread(PYG(tstate))
 #define PHP_PYTHON_THREAD_RELEASE() PyEval_ReleaseThread(PyThreadState_GET())
 
+/* Python Streams */
+int python_streams_init();
+int python_streams_intercept();
+
 /* Python Modules */
 int python_php_init(); 
 
