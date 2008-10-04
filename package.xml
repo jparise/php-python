@@ -13,8 +13,8 @@
   <email>jon@php.net</email>
   <active>yes</active>
  </lead>
- <date>2008-09-21</date>
- <time>19:35:04</time>
+ <date>2008-10-04</date>
+ <time>16:08:16</time>
  <version>
   <release>0.9.0a</release>
   <api>0.6.0</api>
@@ -25,10 +25,12 @@
  </stability>
  <license>MIT License</license>
  <notes>- Each request now has its own, private interpreter state.
-- The new &quot;python.optimize&quot; INI setting controls Python&apos;s optimization level.</notes>
+- The new &quot;python.optimize&quot; INI setting controls Python&apos;s optimization level.
+- Python&apos;s sys.stdout and sys.stderr streams are now intercepted.</notes>
  <contents>
   <dir baseinstalldir="/" name="/">
    <dir name="docs">
+    <file name="guide.txt" role="doc" />
     <file name="internals.txt" role="doc" />
     <file name="TODO" role="doc" />
    </dir> <!-- /docs -->
@@ -38,6 +40,7 @@
    <dir name="tests">
     <file name="convert_to_php.phpt" role="test" />
     <file name="foreach.phpt" role="test" />
+    <file name="ini_optimize.phpt" role="test" />
     <file name="object_count_elements.phpt" role="test" />
     <file name="object_dimension_delete.phpt" role="test" />
     <file name="object_dimension_exists.phpt" role="test" />
@@ -54,6 +57,8 @@
     <file name="python_eval.phpt" role="test" />
     <file name="python_exec.phpt" role="test" />
     <file name="python_version.phpt" role="test" />
+    <file name="streams_default.phpt" role="test" />
+    <file name="streams_ob.phpt" role="test" />
     <file name="TestModule.py" role="test" />
    </dir> <!-- /tests -->
    <file name="config.m4" role="src" />
@@ -67,6 +72,7 @@
    <file name="python_handlers.c" role="src" />
    <file name="python_object.c" role="src" />
    <file name="python_php.c" role="src" />
+   <file name="python_streams.c" role="src" />
   </dir> <!-- / -->
  </contents>
  <dependencies>
@@ -91,10 +97,11 @@
     <release>alpha</release>
     <api>alpha</api>
    </stability>
-   <date>2008-09-21</date>
+   <date>2008-10-04</date>
    <license>MIT License</license>
    <notes>- Each request now has its own, private interpreter state.
-- The new &quot;python.optimize&quot; INI setting controls Python&apos;s optimization level.</notes>
+- The new &quot;python.optimize&quot; INI setting controls Python&apos;s optimization level.
+- Python&apos;s sys.stdout and sys.stderr streams are now intercepted.</notes>
   </release>
   <release>
    <version>
