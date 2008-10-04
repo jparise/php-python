@@ -94,4 +94,31 @@ Python interpreter will generate optimized bytecode, and the built-in
 When set to **2** (equivalent to Python's ``-OO`` command line option), the
 Python doc-strings will be removed in addition to the above optimizations.
 
+Development and Support
+=======================
+
+Reporting Problems and Suggestions
+----------------------------------
+If you run into a problem or would like to make a suggestion, please use the
+`PECL Bug Tracker`_.  Feel free to contact me directly for other issues, but
+please try to use the bug tracker whenever possible so that others in the
+community will benefit from your feedback and my responses.
+
+- `Open Bugs`_
+- `Report a New Bug`_
+
+.. _PECL Bug Tracker: http://pecl.php.net/bugs/
+.. _Open Bugs: http://pecl.php.net/bugs/search.php?cmd=display&status=Open&package_name[]=python
+.. _Report a New Bug: http://pecl.php.net/bugs/report.php?package=python
+
+Coming Soon
+-----------
+This section contains a list of "todo" items that will hopefully be addressed
+in future releases.
+
+- *No items at this time.*
+
+If you have feature suggestions, please submit them using the `PECL Bug
+Tracker`_.
+
 .. vim: tabstop=4 shiftwidth=4 softtabstop=4 expandtab textwidth=78 ft=rst:
