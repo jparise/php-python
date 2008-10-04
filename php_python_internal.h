@@ -41,6 +41,17 @@
 #include "zend.h"
 
 /*
+ * Make sure our version of Python is recent enough and that it has been
+ * built with all of the options that we need.
+ */
+#if !defined(PY_VERSION_HEX) || PY_VERSION_HEX <= 0x02050000
+    #error Sorry, the Python extension requires Python 2.5.0 or later.
+#endif
+#if !defined(WITH_THREAD)
+    #error Sorry, the Python extension requires Python's threading support.
+#endif
+
+/*
  * Py_ssize_t was introduced in Python 2.5.  Define our own version for
  * compatiblity with earlier versions.
  */
