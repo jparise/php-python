@@ -11,7 +11,6 @@ Legacy Items from Version 0.7.0
 - investigate ability to extend Python objects using PHP objects
 - safe_mode checks where applicable
 - display the traceback upon an exception (optionally?)
-- redirect Python stderr back to PHP
 - check for attribute existence in python_attribute_handler()
 - var_dump($python_object) should list attributes (and methods)
 - py_import() should accept arrays and support 'from foo import bar'
