@@ -494,7 +494,7 @@ pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC)
 
 	/*
 	 * Python strings are converted directly to PHP strings.  The contents
-	 * of the string is copied (i.e., duplicated) into the zval.
+	 * of the string are copied (i.e., duplicated) into the zval.
 	 */
 	if (PyString_Check(o)) {
 		ZVAL_STRINGL(zv, PyString_AS_STRING(o), PyString_GET_SIZE(o), 1);
@@ -502,9 +502,9 @@ pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC)
 	}
 
 	/*
-	 * Python Unicode strings are converted to ASCII and stored as PHP
+	 * Python Unicode strings are converted to UTF8 and stored as PHP
 	 * strings.  It is possible for this encoding-based conversion to fail.
-	 * The contents of the ASCII-encoded string as copied (i.e., duplicated)
+	 * The contents of the UTF9-encoded string are copied (i.e., duplicated)
 	 * into the zval.
 	 *
 	 * TODO:
@@ -512,7 +512,7 @@ pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC)
 	 * - Potentially break this conversion out into its own routine.
 	 */
 	if (PyUnicode_Check(o)) {
-		PyObject *s = PyUnicode_AsASCIIString(o);
+		PyObject *s = PyUnicode_AsUTF8String(o);
 		if (s) {
 			ZVAL_STRINGL(zv, PyString_AS_STRING(s), PyString_GET_SIZE(s), 1);
 			Py_DECREF(s);

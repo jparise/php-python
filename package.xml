@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package packagerversion="1.6.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
+<package packagerversion="1.7.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
     http://pear.php.net/dtd/tasks-1.0.xsd
     http://pear.php.net/dtd/package-2.0
     http://pear.php.net/dtd/package-2.0.xsd">
@@ -13,8 +13,8 @@
   <email>jon@php.net</email>
   <active>yes</active>
  </lead>
- <date>2008-10-04</date>
- <time>16:08:16</time>
+ <date>2009-01-18</date>
+ <time>15:39:48</time>
  <version>
   <release>0.9.0a</release>
   <api>0.6.0</api>
@@ -24,7 +24,8 @@
   <api>alpha</api>
  </stability>
  <license>MIT License</license>
- <notes>- Each request now has its own, private interpreter state.
+ <notes>- Python Unicode strings are now converted to UTF8-encoded PHP strings.
+- Each request now has its own, private interpreter state.
 - The new &quot;python.optimize&quot; INI setting controls Python&apos;s optimization level.
 - Python&apos;s sys.stdout and sys.stderr streams are now intercepted.</notes>
  <contents>
@@ -97,9 +98,10 @@
     <release>alpha</release>
     <api>alpha</api>
    </stability>
-   <date>2008-10-04</date>
+   <date>2009-01-18</date>
    <license>MIT License</license>
-   <notes>- Each request now has its own, private interpreter state.
+   <notes>- Python Unicode strings are now converted to UTF8-encoded PHP strings.
+- Each request now has its own, private interpreter state.
 - The new &quot;python.optimize&quot; INI setting controls Python&apos;s optimization level.
 - Python&apos;s sys.stdout and sys.stderr streams are now intercepted.</notes>
   </release>
