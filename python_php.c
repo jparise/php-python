@@ -49,12 +49,17 @@ php_call(PyObject *self, PyObject *args)
 	const char *name;
 	int name_len, i, argc;
 	zval ***argv, *lcname, *ret;
-	PyObject *params;
+	PyObject *params = NULL;
 
 	TSRMLS_FETCH();
 
 	if (!PyArg_ParseTuple(args, "s#|O:call", &name, &name_len, &params))
 		return NULL;
+
+	if (params && !PySequence_Check(params)) {
+		PyErr_Format(PyExc_ValueError, "Second argument must be a sequence");
+		return NULL;
+	}
 
 	/* Name entries in the PHP function_table are always lowercased. */
 	MAKE_STD_ZVAL(lcname);
@@ -69,20 +74,23 @@ php_call(PyObject *self, PyObject *args)
 	}
 
 	/* Convert the parameters into PHP values. */
-	argc = PyTuple_Size(params);
+	argc = params ? PySequence_Size(params) : 0;
 	argv = emalloc(sizeof(zval **) * argc);
 
 	for (i = 0; i < argc; ++i) {
-		PyObject *item = PyTuple_GetItem(params, i);
+		PyObject *item = PySequence_GetItem(params, i);
 
 		argv[i] = emalloc(sizeof(zval *));
 		MAKE_STD_ZVAL(*argv[i]);
 
 		if (pip_pyobject_to_zval(item, *argv[i] TSRMLS_CC) != SUCCESS) {
 			PyErr_Format(PyExc_ValueError, "Bad argument at index %d", i);
-			efree_array(argv, argc);
+			Py_DECREF(item);
+			efree_array(argv, i + 1);
 			return NULL;
 		}
+
+		Py_DECREF(item);
 	}
 
 	/* Now we can call the PHP function. */
