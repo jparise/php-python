@@ -9,10 +9,11 @@ EOT;
 
 $version = '0.9.0a';
 $notes = <<<EOT
-- Python Unicode strings are now converted to UTF8-encoded PHP strings.
 - Each request now has its own, private interpreter state.
 - The new "python.optimize" INI setting controls Python's optimization level.
 - Python's sys.stdout and sys.stderr streams are now intercepted.
+- Python Unicode strings are now converted to UTF8-encoded PHP strings.
+- Added a new php.call() Python function for calling PHP functions.
 EOT;
 
 $package = new PEAR_PackageFileManager2();
