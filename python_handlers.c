@@ -47,10 +47,10 @@ efree_function(zend_internal_function *func)
 	/* Free the argument information. */
 	for (i = 0; i < func->num_args; ++i) {
 		if (func->arg_info[i].name)
-			efree(func->arg_info[i].name);
+			efree((void *)func->arg_info[i].name);
 
 		if (func->arg_info[i].class_name)
-			efree(func->arg_info[i].class_name);
+			efree((void *)func->arg_info[i].class_name);
 	}
 	efree(func->arg_info);
 
@@ -556,10 +556,10 @@ python_call_method(char *method_name, INTERNAL_FUNCTION_PARAMETERS)
 		}
 	}
 
-	/* Release the memory that we allocated for this function in method_get. */
-	efree_function((zend_internal_function *)EG(function_state_ptr)->function);
-
 	PHP_PYTHON_THREAD_RELEASE();
+
+	/* Release the memory that we allocated for this function in method_get. */
+	efree_function((zend_internal_function *)EG(current_execute_data)->function_state.function);
 
 	return ret;
 }
@@ -573,19 +573,19 @@ python_constructor_get(zval *object TSRMLS_DC)
 	return pip->ce->constructor;
 }
 /* }}} */
-/* {{{ python_get_class_entry(zval *object TSRMLS_DC)
+/* {{{ python_get_class_entry(const zval *object TSRMLS_DC)
  */
 static zend_class_entry *
-python_get_class_entry(zval *object TSRMLS_DC)
+python_get_class_entry(const zval *object TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
 	return pip->ce;
 }
 /* }}} */
-/* {{{ python_get_class_name(zval *object, char **class_name, zend_uint *class_name_len, int parent TSRMLS_DC)
+/* {{{ python_get_class_name(const zval *object, char **class_name, zend_uint *class_name_len, int parent TSRMLS_DC)
  */
 static int
-python_get_class_name(zval *object, char **class_name,
+python_get_class_name(const zval *object, char **class_name,
 					  zend_uint *class_name_len, int parent TSRMLS_DC)
 {
 	PHP_PYTHON_FETCH(pip, object);
