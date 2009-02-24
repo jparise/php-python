@@ -60,7 +60,7 @@ $package->setAPIStability('alpha');
 $package->setReleaseVersion($version);
 $package->setReleaseStability('alpha');
 $package->setNotes($notes);
-$package->setPhpDep('5.0.0');
+$package->setPhpDep('5.3.0');
 $package->setPearInstallerDep('1.4.3');
 
 $package->generateContents();
