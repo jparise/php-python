@@ -40,7 +40,7 @@ zend_class_entry *python_class_entry;
 
 /* {{{ python_functions[]
  */
-function_entry python_functions[] = {
+zend_function_entry python_functions[] = {
 	PHP_FE(python_version,		NULL)
 	PHP_FE(python_eval,			NULL)
 	PHP_FE(python_exec,			NULL)
