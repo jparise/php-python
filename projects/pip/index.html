@@ -1,0 +1,267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<title>PiP - Python in PHP</title>
+	<link href="../../base.css" rel="stylesheet" type="text/css" />
+	<meta name="keywords" content="Jon Parise, Jon, Parise" />
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<meta property="og:type" content="website" />
+	<meta property="og:latitude" content="43.084957" />
+	<meta property="og:longitude" content="-77.667745" />
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#669966" alink="#993333" vlink="#669966">
+
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr valign="top">
+    <td width="20">
+        <img src="../../images/pixel.gif" width="20" height="1" border="0" alt="" /><br />
+    </td>
+    <td>
+
+<h1>PiP - Python in PHP</h1>
+<p>
+Both <a href="http://www.python.org/">Python</a> and <a href="http://www.php.net/">PHP</a> are what has become known as interpretted scripting languages.  Each has achieved substantial popularity due primarily to their ability to facilitate rapid prototyping.  As both a Python and PHP enthusiast, I wanted to bring these two systems together to promote even greater and more interesting development opportunities.
+</p>
+<p>
+To that end, I've written a Python extension for PHP.  In short, this extensions allows the Python interpretter to be embedded inside of PHP (think of PHP as the parent language with Python as its child).  This allows native Python objects to be instantiated and manipulated from within PHP.  There is also initial support for accessing PHP functions and data from within the embedded Python environment.
+</p>
+<p>
+What exists right now is primarily a "proof of concept" implementation.  It will serve as a solid starting point development.
+</p>
+<p>
+The Python extension is available from its <a href="http://pecl.php.net/package/python">PECL package page</a>.  The source code currently lives <a href="http://cvs.php.net/cvs.php/pecl/python/">in the PECL CVS repository</a>.  Some packaged <a href="#dist">distributions</a> are also available.
+</p>
+<p>
+<a href="../../pres/">Slides</a> from my presentations at the <a href="http://www.phpconference.de/2002/index_en.php">2002 International PHP Conference</a> are available.  I discussed <a href="../../pres/php-2002/pip-internals.html">internals</a> and <a href="../../pres/php-2002/pip-applications.html">applications</a>.
+</p>
+
+<a name="examples"><h2>Examples</h2></a>
+<p>
+Here's an example of what it can do at the moment:
+</p>
+<span class="caption">1. Evaluating Python Code from PHP</span>
+<pre>
+&lt;?php
+$a = "test";
+$b = true;
+$c = 50;
+$d = 60.4;
+
+$code = &lt;&lt;&lt;EOD
+import php
+
+a = php.var('a')
+b = php.var('b')
+c = php.var('c')
+d = php.var('d')
+
+print a, b, c, d
+print a, d / c + b, a
+EOD;
+
+py_eval($code);
+?&gt;
+</pre>
+
+<span class="caption">Result</span>
+<pre>
+test 1 50 60.4
+test 2.208 test
+</pre>
+
+<br />
+
+<span class="caption">2. Python Object Instantiation</span>
+<pre>
+# module.py
+class TestClass:
+    def __init__(self, foo):
+        self.foo = foo
+
+    def returnInt(self):
+        return 1113
+
+    def test(self, a, b = 'str'):
+        return "a = %d, b = %s" % (a, b)
+
+    def returnMe(self):
+        return self
+
+    def returnTuple(self):
+        return (1, "two", 3.0)
+
+    def returnList(self):
+        return [1, "two", 3.0]
+
+    def returnDict(self):
+        d = {}
+        d['one'] = 1
+        d['two'] = 2
+        d['three'] = 3
+        return d
+
+    def p(self, var):
+        print var
+</pre>
+
+<pre>
+&lt;?php
+$p = new Python('module', 'TestClass', array(435));
+print $p->returnInt() . "\n";
+print $p->test(1, 'bar') . "\n";
+
+print $p->foo . "\n";
+$p->foo = 987;
+print $p->foo . "\n";
+
+# $copy points to the same object
+$copy = $p->returnMe();
+print $copy->foo . "\n";
+$p->foo = 987;
+print $copy->foo . "\n";
+?&gt;
+</pre>
+
+<span class="caption">Result</span>
+<pre>
+1113
+a = 1, b = bar
+435
+987
+987
+987
+</pre>
+
+<br />
+
+<span class="caption">3. Type Conversion</span>
+<pre>
+&lt;?php
+var_dump($p->returnTuple());
+var_dump($p->returnList());
+var_dump($p->returnDict());
+
+$a = array('one' => 1, 2, 3);
+$p->p($a);
+
+class Test {
+    var $member = 'test';
+}
+
+$t = new Test();
+$p->p($t);
+?&gt;
+</pre>
+
+<span class="caption">Result</span>
+<pre>
+array(3) {
+  [0]=>
+  int(1)
+  [1]=>
+  string(3) "two"
+  [2]=>
+  float(3)
+}
+array(3) {
+  [0]=>
+  int(1)
+  [1]=>
+  string(3) "two"
+  [2]=>
+  float(3)
+}
+array(3) {
+  ["three"]=>
+  int(3)
+  ["two"]=>
+  int(2)
+  ["one"]=>
+  int(1)
+}
+{'1': 3, '0': 2, 'one': 1}
+{'member': 'test'}
+</pre>
+
+<p>
+As you can see, these current examples are fairly crude.  In time, I'll work up some more detailed examples, but hopefully the above illustrate the extensions current cabilities.
+</p>
+<p>
+A great deal of inspiration (in the forms design and code) for my Python in PHP extension came from the existing <a href="http://www.php.net/manual/en/ref.java.php">Java</a> PHP extension and the <a href="http://www.modpython.org/">mod_python</a> Apache module.
+</p>
+
+<a name="dist"><h2>Distributions</h2></a>
+<p>
+The current code is still considered "alpha" quality.  It may contain bugs and definitely lacks features.  There are still a large number of performance issues that require consideration.
+</p>
+<p>
+The distribution is packaged using the <a href="http://pear.php.net/">PEAR</a> installation tool.  Under supported platforms, the extension can be build using the following command:
+</p>
+<span class="caption">Building with PEAR</span>
+<pre>
+<b>$ pear build</b>
+running: phpize
+PHP Api Version        : 20020307
+Zend Module Api No     : 20020429
+Zend Extension Api No  : 20021010
+Python installation directory? [autodetect] : 
+building in /var/tmp/pear-build-jon/python-0.1
+running: /home/jon/src/pear/PECL/python/configure --with-python
+running: make
+python.so copied to /home/jon/src/pear/PECL/python/python.so
+</pre>
+<p>
+A Microsoft Visual C++ 6.0 <a href="http://cvs.php.net/co.php/pecl/python/python.dsp">project file</a> is also included to facilitate building under Windows.
+</p>
+<p>
+Note that you'll need <a href="http://www.python.org/">Python</a> installed in order to build the extension.  I'm currently building against <a href="http://www.python.org/2.2.2/">Python 2.2.2</a>.  I've heard that <a href="http://www.activestate.com/Products/ActivePython/">ActivePython</a> works, as well.
+</p>
+<p>
+Also, a lot of the behavior (particularly with regard to type conversions) has not be finalized.  The array to sequence conversion will definitely evolve, for instance.
+</p>
+<p>
+Feel free to contact me with comments or suggestions (remember: the best suggestions come in <tt>diff -u</tt> format).  I can't guarantee I'll have time to act on that immediately, but I will surely get to them soon.
+</p>
+<ul>
+<li><a href="dist/python-0.6.0.tgz">Python in PHP 0.6.0</a> - PEAR package (released November 5, 2002)</li>
+<li><a href="dist/pip-0.5.zip">Python in PHP 0.5</a> - Zip file (released July 7, 2002)</li>
+</ul>
+
+<p>
+These files are also available via <a href="ftp://ftp.csh.rit.edu/pub/members/jon/pip/">anonymous FTP</a>.
+</p>
+
+
+    </td>
+</tr>
+</table>
+
+<br />
+
+<table border="0" cellspacing="0" cellpadding="5" width="100%">
+<tr class="footer" valign="top">
+	<td class="footer" align="left" nowrap="nowrap">
+		Copyright &copy; 1997-2012 by Jon Parise.<br />
+		All rights reserved.<br />
+	</td>
+	<td class="footer" align="right" nowrap="nowrap">
+		Last updated: October 21, 2003 20:53 EDT<br />
+		<a href="http://validator.w3.org/check/referer">Valid XHTML 1.0</a> //
+		<a href="http://jigsaw.w3.org/css-validator/validator?uri=http://www.csh.rit.edu/~jon/base.css&amp;warning=1&amp;profile=css2">Valid CSS</a>
+	</td>
+</tr>
+</table>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-6958160-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+</html>

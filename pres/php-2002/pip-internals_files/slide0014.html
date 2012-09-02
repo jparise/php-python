@@ -1,0 +1,197 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:p="urn:schemas-microsoft-com:office:powerpoint"
+xmlns:oa="urn:schemas-microsoft-com:office:activation"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=PowerPoint.Slide>
+<meta name=Generator content="Microsoft PowerPoint 10">
+<link id=Main-File rel=Main-File href="../pip-internals.html">
+<link rel=Preview href=preview.wmf>
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+p\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+v\:textbox {display:none;}
+</style>
+<![endif]-->
+<title>Python in PHP: Internals</title>
+<meta name=Description content="11/8/2002: How It Works">
+<link rel=Stylesheet href="master34_stylesheet.css">
+<![if !ppt]>
+<style media=print>
+<!--.sld
+	{left:0px !important;
+	width:6.0in !important;
+	height:4.5in !important;
+	font-size:107% !important;}
+-->
+</style>
+<script src=script.js></script><script><!--
+if( !IsNts() ) Redirect( "PPTSld" );
+//--></script><!--[if vml]><script>g_vml = 1;
+</script><![endif]--><![endif]><o:shapelayout v:ext="edit">
+ <o:idmap v:ext="edit" data="63,69"/>
+</o:shapelayout>
+</head>
+
+<body lang=EN-US style='margin:0px;background-color:black'
+onclick="DocumentOnClick()" onresize="_RSW()" onload="LoadSld()"
+onkeypress="_KPH()">
+
+<div id=SlideObj class=sld style='position:absolute;top:0px;left:0px;
+width:534px;height:400px;font-size:16px;background-color:#DDDDDD;background-image:
+url("master34_background.gif");
+clip:rect(0%, 101%, 101%, 0%);visibility:hidden'><p:slide coordsize="720,540"
+ colors="#FFFFFF,#000000,#DDDDDD,#000000,#A3B2C1,#CC0000,#336699,#003366"
+ masterhref="master34.xml">
+ <p:shaperange href="master34.xml#_x0000_s50177"/><![if !ppt]><p:shaperange
+  href="master34.xml#_x0000_s50180"/><![if !vml]><img border=0
+ v:shapes="_x0000_s50180" src="master34_image005.gif" style='position:absolute;
+ top:22.75%;left:6.55%;width:87.45%;height:2.0%'><![endif]><p:shaperange
+  href="master34.xml#_x0000_s50181"/><![if !vml]><img border=0
+ v:shapes="_x0000_s50181" src="master34_image006.gif" style='position:absolute;
+ top:90.0%;left:6.74%;width:87.07%;height:.5%'><![endif]><p:shaperange
+  href="master34.xml#_x0000_s50182"/>
+ <div v:shape="_x0000_s50182" class=O style='position:absolute;top:91.75%;
+ left:7.67%;width:19.85%;height:3.0%'><span lang=EN-US style='font-family:Verdana;
+ font-size:67%;mso-field-code:meta0'>November 5, 2002</span><span
+ style='font-family:Verdana;font-size:67%;mso-special-format:lastCR;display:
+ none'>&#13;</span></div>
+ <p:shaperange href="master34.xml#_x0000_s50183"/>
+ <div v:shape="_x0000_s50183" class=O style='text-align:center;position:absolute;
+ top:91.75%;left:35.2%;width:29.77%;height:3.0%'><span style='font-family:Verdana;
+ font-size:67%;mso-field-code:meta15'>Python in PHP: Internals</span><span
+ style='font-family:Verdana;font-size:67%;mso-special-format:lastCR;display:
+ none'>&#13;</span></div>
+ <p:shaperange href="master34.xml#_x0000_s50184"/>
+ <div v:shape="_x0000_s50184" class=O>
+ <div style='text-align:right;position:absolute;top:91.75%;left:72.65%;
+ width:19.85%;height:3.0%'><span style='font-family:Verdana;font-size:67%;
+ mso-field-code:meta16'>13</span><span style='font-family:Verdana;font-size:
+ 67%;mso-special-format:lastCR;display:none'>&#13;</span></div>
+ </div>
+ <![endif]><p:shaperange href="master34.xml#_x0000_m50178"/><v:shape id="_x0000_s70658"
+  type="#_x0000_m50178" style='position:absolute;left:45.25pt;top:24pt;width:630pt;
+  height:95.75pt' o:userdrawn="f">
+  <v:fill o:detectmouseclick="f"/>
+  <v:stroke o:forcedash="f"/>
+  <o:lock v:ext="edit" text="f"/>
+  <p:placeholder type="title"/></v:shape><p:shaperange
+  href="master34.xml#_x0000_m50179"/><v:shape id="_x0000_s70660" type="#_x0000_m50179"
+  style='position:absolute;left:42pt;top:138pt;width:258pt;height:336pt'
+  o:userdrawn="f">
+  <v:fill o:detectmouseclick="f"/>
+  <v:stroke o:forcedash="f"/>
+  <o:lock v:ext="edit" text="f"/>
+  <p:placeholder type="body" position="1" size="half"/></v:shape><p:shaperange
+  href="master34.xml#_x0000_m50179"/><v:shape id="_x0000_s70661" type="#_x0000_m50179"
+  style='position:absolute;left:4in;top:138pt;width:390pt;height:336pt'
+  o:userdrawn="f">
+  <v:fill o:detectmouseclick="f"/>
+  <v:stroke o:forcedash="f"/>
+  <o:lock v:ext="edit" text="f"/>
+  <p:placeholder type="body" position="2" size="half"/></v:shape>
+ <div v:shape="_x0000_s70658" class=T style='position:absolute;top:13.0%;
+ left:7.3%;width:85.58%;height:8.75%'>How It Works</div>
+ <div v:shape="_x0000_s70660">
+ <div class=HB2 style='mso-margin-left-alt:825'></div>
+ <div class=HB style='mso-margin-left-alt:312'><span style='position:absolute;
+ top:26.25%;left:12.17%;width:28.65%;height:5.75%'><span style='font-size:92%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-18.3%'>1.</span></span><span style='font-size:92%'>Extension
+ </span></span><span style='position:absolute;top:31.5%;left:12.17%;width:28.65%;
+ height:5.75%'><span style='font-size:92%'>initialization&#13;</span></span></div>
+ <div class=HB style='mso-margin-left-alt:312'><span style='position:absolute;
+ top:38.0%;left:12.17%;width:28.65%;height:5.75%'><span style='font-size:92%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-18.3%'>2.</span></span><span style='font-size:92%'>Python
+ </span></span><span style='position:absolute;top:43.25%;left:12.17%;
+ width:28.65%;height:5.75%'><span style='font-size:92%'>initialization&#13;</span></span></div>
+ <div class=HB style='mso-margin-left-alt:312'><span style='position:absolute;
+ top:49.5%;left:12.17%;width:28.65%;height:5.75%'><span style='font-size:92%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-18.3%'>3.</span></span><span style='font-size:92%'>Python
+ code </span></span><span style='position:absolute;top:55.0%;left:12.17%;
+ width:28.65%;height:5.75%'><span style='font-size:92%'>execution&#13;</span></span></div>
+ <div class=HB style='mso-margin-left-alt:312'><span style='position:absolute;
+ top:61.25%;left:12.17%;width:28.65%;height:5.75%'><span style='font-size:92%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-18.3%'>4.</span></span><span style='font-size:92%'>Extension
+ </span></span><span style='position:absolute;top:66.75%;left:12.17%;
+ width:28.65%;height:5.75%'><span style='font-size:92%'>shutdown&#13;</span></span></div>
+ <div class=HB style='mso-margin-left-alt:312'><span style='position:absolute;
+ top:73.0%;left:12.17%;width:28.65%;height:5.75%'><span style='font-size:92%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-18.3%'>5.</span></span><span style='font-size:92%'>Python
+ </span></span><span style='position:absolute;top:78.25%;left:12.17%;
+ width:28.65%;height:5.75%'><span style='font-size:92%'>shutdown</span></span></div>
+ </div>
+ <div v:shape="_x0000_s70661" class=HB>
+ <div style='position:absolute;top:26.5%;left:41.01%;width:52.24%;height:5.25%'><span
+ style='position:absolute;top:0%;left:9.67%;width:90.32%;height:100.0%'><span
+ style='font-family:"Courier New";font-size:92%;color:#003366;mso-color-index:
+ 7'><span style='mso-special-format:bullet;color:black;mso-color-index:1;
+ position:absolute;left:-10.71%;font-family:Wingdings'>ð</span></span><span
+ style='font-family:"Courier New";font-size:92%;color:#003366;mso-color-index:
+ 7'><b>PHP_MINIT_FUNCTION&#13;</b></span></span></div>
+ <div style='position:absolute;top:32.75%;left:41.01%;width:52.24%;height:5.25%'><span
+ style='position:absolute;top:0%;left:9.67%;width:90.32%;height:100.0%'><span
+ style='font-family:"Courier New";font-size:92%;color:green;visibility:hidden'><span
+ style='mso-special-format:bullet;color:black;mso-color-index:1;position:absolute;
+ left:-10.71%;font-family:Wingdings'>ð</span></span><span style='font-family:
+ "Courier New";font-size:92%;color:green;display:none'><b>&#13;</b></span></span></div>
+ <div style='position:absolute;top:39.25%;left:41.01%;width:52.24%;height:5.25%'><span
+ style='position:absolute;top:0%;left:9.67%;width:90.32%;height:100.0%'><span
+ style='font-family:"Courier New";font-size:92%;color:green'><span
+ style='mso-special-format:bullet;color:black;mso-color-index:1;position:absolute;
+ left:-10.71%;font-family:Wingdings'>ð</span></span><span style='font-family:
+ "Courier New";font-size:92%;color:green'><b>Py_Initialize()&#13;</b></span></span></div>
+ <div style='position:absolute;top:45.5%;left:41.01%;width:52.24%;height:5.25%'><span
+ style='position:absolute;top:0%;left:9.67%;width:90.32%;height:100.0%'><span
+ style='font-family:"Courier New";font-size:92%;color:#003366;mso-color-index:
+ 7;visibility:hidden'><span style='mso-special-format:bullet;color:black;
+ mso-color-index:1;position:absolute;left:-10.71%;font-family:Wingdings'>ð</span></span><span
+ style='font-family:"Courier New";font-size:92%;color:#003366;mso-color-index:
+ 7;display:none'><b>&#13;</b></span></span></div>
+ <div style='position:absolute;top:52.0%;left:41.01%;width:53.18%;height:5.25%'><span
+ style='position:absolute;top:0%;left:9.5%;width:90.49%;height:100.0%'><span
+ style='font-family:"Courier New";font-size:92%;color:green'><span
+ style='mso-special-format:bullet;color:black;mso-color-index:1;position:absolute;
+ left:-10.5%;font-family:Wingdings'>ð</span></span><span style='font-family:
+ "Courier New";font-size:92%;color:green'><b><i>PyRun_SimpleString()&#13;</i></b></span></span></div>
+ <div style='position:absolute;top:58.5%;left:41.01%;width:52.24%;height:5.25%'><span
+ style='position:absolute;top:0%;left:9.67%;width:90.32%;height:100.0%'><span
+ style='font-family:"Courier New";font-size:92%;color:green;visibility:hidden'><span
+ style='mso-special-format:bullet;color:black;mso-color-index:1;position:absolute;
+ left:-10.71%;font-family:Wingdings'>ð</span></span><span style='font-family:
+ "Courier New";font-size:92%;color:green;display:none'><b><i>&#13;</i></b></span></span></div>
+ <div style='position:absolute;top:64.75%;left:41.01%;width:58.05%;height:5.25%'><span
+ style='position:absolute;top:0%;left:8.7%;width:91.29%;height:100.0%'><span
+ style='font-family:"Courier New";font-size:92%;color:#003366;mso-color-index:
+ 7'><span style='mso-special-format:bullet;color:black;mso-color-index:1;
+ position:absolute;left:-9.54%;font-family:Wingdings'>ð</span></span><span
+ style='font-family:"Courier New";font-size:92%;color:#003366;mso-color-index:
+ 7'><b>PHP_MSHUTDOWN_FUNCTION&#13;</b></span></span></div>
+ <div style='position:absolute;top:71.25%;left:41.01%;width:52.24%;height:5.25%'><span
+ style='position:absolute;top:0%;left:9.67%;width:90.32%;height:100.0%'><span
+ style='font-family:"Courier New";font-size:92%;color:green;visibility:hidden'><span
+ style='mso-special-format:bullet;color:black;mso-color-index:1;position:absolute;
+ left:-10.71%;font-family:Wingdings'>ð</span></span><span style='font-family:
+ "Courier New";font-size:92%;color:green;display:none'><b><i>&#13;</i></b></span></span></div>
+ <div style='position:absolute;top:77.5%;left:41.01%;width:52.24%;height:5.25%'><span
+ style='position:absolute;top:0%;left:9.67%;width:90.32%;height:100.0%'><span
+ style='font-family:"Courier New";font-size:92%;color:green'><span
+ style='mso-special-format:bullet;color:black;mso-color-index:1;position:absolute;
+ left:-10.71%;font-family:Wingdings'>ð</span></span><span style='font-family:
+ "Courier New";font-size:92%;color:green'><b>Py_Finalize()</b></span></span></div>
+ </div>
+</p:slide></div>
+
+</body>
+
+</html>

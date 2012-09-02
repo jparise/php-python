@@ -1,0 +1,160 @@
+body {
+	background: #ffffff;
+	color: #000000;
+	font-family: georgia, verdana, arial, helvetica, sans-serif;
+	font-size: 90%;
+	margin: 0px;
+}
+
+td {
+	color: #000000;
+	font-family: georgia, verdana, arial, helvetica, sans-serif;
+	font-size: 90%;
+}
+
+p {
+	color: #000000;
+	font-family: georgia, verdana, arial, helvetica, sans-serif;
+	font-size: 95%;
+	margin-right: 20px;
+}
+
+pre, code {
+	background-color: #f4f4f4;
+	font-family: "andale mono", "monotype.com", "courier new", monospace;
+	font-size: 90%;
+	margin-left: 10px;
+	margin-right: 40px;
+	margin-top: 5px;
+}
+
+tt {
+	font-family: "andale mono", "monotype.com", "courier new", monospace;
+	font-size: 90%;
+}
+
+h1 {
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 140%;
+	font-weight: bold;
+	color: #333333;
+	margin-top: 6px;
+}
+
+h2 {
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 120%;
+	font-weight: bold;
+	color: #333333;
+	margin-top: 6px;
+}
+
+h3 {
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 110%;
+	font-weight: bold;
+	color: #333333;
+	margin-top: 6px;
+}
+
+h4 {
+	color: #663333;
+	font-weight: bold;
+	font-style: italic;
+}
+
+a {
+	color: #669966;
+}
+
+a:hover {
+	color: #663333;
+}
+
+a.heading {
+	color: #333333;
+}
+
+a.heading:hover {
+	color: #333333;
+	text-decoration: underline;
+}
+
+.nav {
+	color: #333333;
+	font-family: arial, helvetica, sans-serif;
+	font-size: 13px;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+a.nav:hover {
+	text-decoration: underline;
+}
+
+.headerdate {
+	color: #666666;
+	font-family: arial, helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+}
+
+.date {
+	color: #663333;
+	font-size: 11px;
+	font-style: italic;
+}
+
+.caption {
+	color: #660000;
+	font-family: arial, helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+	margin-left: 10px;
+}
+
+.blurb {
+	margin-left: 30px;
+	margin-right: 40px;
+	text-align: justify;
+}
+
+.sideHeading {
+	color: #999999;
+	font-size: 11px;
+	margin-top: 10px;
+}
+
+.sideText {
+	color: #333333;
+	font-size: 11px;
+	margin-left: 10px;
+	margin-top: 4px;
+}
+
+.sideSubtext {
+	margin-left: 10px;
+	margin-bottom: 4px;
+}
+
+.masthead {
+	border-bottom: #666666 solid 1px;
+}
+
+.footer {
+	border-top: #666666 solid 1px;
+	color: #333333;
+	font-family: arial, helvetica, sans-serif;
+	font-size: 11px;
+}
+
+.tabledate {
+	border-right: #cccccc solid 1px;
+	color: #663333;
+	font-style: italic;
+	text-align: right;
+}
+
+.changelog {
+	border-bottom: #cccccc solid 1px;
+}

@@ -1,0 +1,146 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:p="urn:schemas-microsoft-com:office:powerpoint"
+xmlns:oa="urn:schemas-microsoft-com:office:activation"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=PowerPoint.Slide>
+<meta name=Generator content="Microsoft PowerPoint 10">
+<link id=Main-File rel=Main-File href="../pip-internals.html">
+<link rel=Preview href=preview.wmf>
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+p\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+v\:textbox {display:none;}
+</style>
+<![endif]-->
+<title>Python in PHP: Internals</title>
+<meta name=Description content="11/8/2002: Handling Method Calls">
+<link rel=Stylesheet href="master34_stylesheet.css">
+<![if !ppt]>
+<style media=print>
+<!--.sld
+	{left:0px !important;
+	width:6.0in !important;
+	height:4.5in !important;
+	font-size:107% !important;}
+-->
+</style>
+<script src=script.js></script><script><!--
+if( !IsNts() ) Redirect( "PPTSld" );
+//--></script><!--[if vml]><script>g_vml = 1;
+</script><![endif]--><![endif]><o:shapelayout v:ext="edit">
+ <o:idmap v:ext="edit" data="89"/>
+</o:shapelayout>
+</head>
+
+<body lang=EN-US style='margin:0px;background-color:black'
+onclick="DocumentOnClick()" onresize="_RSW()" onload="LoadSld()"
+onkeypress="_KPH()">
+
+<div id=SlideObj class=sld style='position:absolute;top:0px;left:0px;
+width:534px;height:400px;font-size:16px;background-color:#DDDDDD;background-image:
+url("master34_background.gif");
+clip:rect(0%, 101%, 101%, 0%);visibility:hidden'><p:slide coordsize="720,540"
+ colors="#FFFFFF,#000000,#DDDDDD,#000000,#A3B2C1,#CC0000,#336699,#003366"
+ masterhref="master34.xml">
+ <p:shaperange href="master34.xml#_x0000_s50177"/><![if !ppt]><p:shaperange
+  href="master34.xml#_x0000_s50180"/><![if !vml]><img border=0
+ v:shapes="_x0000_s50180" src="master34_image005.gif" style='position:absolute;
+ top:22.75%;left:6.55%;width:87.45%;height:2.0%'><![endif]><p:shaperange
+  href="master34.xml#_x0000_s50181"/><![if !vml]><img border=0
+ v:shapes="_x0000_s50181" src="master34_image006.gif" style='position:absolute;
+ top:90.0%;left:6.74%;width:87.07%;height:.5%'><![endif]><p:shaperange
+  href="master34.xml#_x0000_s50182"/>
+ <div v:shape="_x0000_s50182" class=O style='position:absolute;top:91.75%;
+ left:7.67%;width:19.85%;height:3.0%'><span lang=EN-US style='font-family:Verdana;
+ font-size:67%;mso-field-code:meta0'>November 5, 2002</span><span
+ style='font-family:Verdana;font-size:67%;mso-special-format:lastCR;display:
+ none'>&#13;</span></div>
+ <p:shaperange href="master34.xml#_x0000_s50183"/>
+ <div v:shape="_x0000_s50183" class=O style='text-align:center;position:absolute;
+ top:91.75%;left:35.2%;width:29.77%;height:3.0%'><span style='font-family:Verdana;
+ font-size:67%;mso-field-code:meta15'>Python in PHP: Internals</span><span
+ style='font-family:Verdana;font-size:67%;mso-special-format:lastCR;display:
+ none'>&#13;</span></div>
+ <p:shaperange href="master34.xml#_x0000_s50184"/>
+ <div v:shape="_x0000_s50184" class=O>
+ <div style='text-align:right;position:absolute;top:91.75%;left:72.65%;
+ width:19.85%;height:3.0%'><span style='font-family:Verdana;font-size:67%;
+ mso-field-code:meta16'>30</span><span style='font-family:Verdana;font-size:
+ 67%;mso-special-format:lastCR;display:none'>&#13;</span></div>
+ </div>
+ <![endif]><p:shaperange href="master34.xml#_x0000_m50178"/><v:shape id="_x0000_s91138"
+  type="#_x0000_m50178" style='position:absolute;left:45.25pt;top:24pt;width:630pt;
+  height:95.75pt' o:userdrawn="f">
+  <v:fill o:detectmouseclick="f"/>
+  <v:stroke o:forcedash="f"/>
+  <o:lock v:ext="edit" text="f"/>
+  <p:placeholder type="title"/></v:shape><p:shaperange
+  href="master34.xml#_x0000_m50179"/><v:shape id="_x0000_s91139" type="#_x0000_m50179"
+  style='position:absolute;left:44.625pt;top:138pt;width:630pt;height:336pt'
+  o:userdrawn="f">
+  <v:fill o:detectmouseclick="f"/>
+  <v:stroke o:forcedash="f"/>
+  <o:lock v:ext="edit" text="f"/>
+  <p:placeholder type="body" position="1"/></v:shape>
+ <div v:shape="_x0000_s91138" class=T style='position:absolute;top:13.0%;
+ left:7.3%;width:85.58%;height:8.75%'>Handling Method Calls</div>
+ <div v:shape="_x0000_s91139">
+ <div class=B2 style='mso-margin-left-alt:849'></div>
+ <div class=B style='mso-line-spacing:"90 20 0";mso-margin-left-alt:360;
+ position:absolute;top:25.75%;left:7.11%;width:85.58%;height:7.0%'><span
+ style='mso-special-format:nobullet;display:none;color:#CC0000;mso-color-index:
+ 5;font-family:Wingdings'>§</span>If the method name is 'python':&#13;</div>
+ <div class=B1 style='mso-line-spacing:"90 20 0";mso-margin-left-alt:609;
+ position:absolute;top:32.75%;left:12.35%;width:80.52%;height:6.0%'><span
+ style='position:absolute;top:0%;left:6.74%;width:93.25%;height:100.0%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-7.23%'>1.</span>Import the requested module&#13;</span></div>
+ <div class=B1 style='mso-line-spacing:"90 20 0";mso-margin-left-alt:609;
+ position:absolute;top:39.25%;left:12.35%;width:80.52%;height:6.0%'><span
+ style='position:absolute;top:0%;left:6.74%;width:93.25%;height:100.0%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-7.23%'>2.</span>Construct a new Python object&#13;</span></div>
+ <div class=B1 style='mso-line-spacing:"90 20 0";mso-margin-left-alt:609;
+ position:absolute;top:45.5%;left:12.35%;width:82.02%;height:6.0%'><span
+ style='position:absolute;top:0%;left:6.62%;width:93.37%;height:100.0%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-7.09%'>3.</span>Register and return the new
+ object&#13;</span></div>
+ <div class=B style='mso-line-spacing:"90 20 0";mso-margin-left-alt:360;
+ position:absolute;top:52.0%;left:7.11%;width:85.58%;height:7.0%'><span
+ style='mso-special-format:nobullet;display:none;color:#CC0000;mso-color-index:
+ 5;font-family:Wingdings'>§</span>Else:&#13;</div>
+ <div class=B1 style='mso-line-spacing:"90 20 0";mso-margin-left-alt:609;
+ position:absolute;top:59.25%;left:12.35%;width:80.52%;height:6.0%'><span
+ style='position:absolute;top:0%;left:6.74%;width:93.25%;height:100.0%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-7.23%'>1.</span>Retrieve the Python object handle&#13;</span></div>
+ <div class=B1 style='mso-line-spacing:"90 20 0";mso-margin-left-alt:609;
+ position:absolute;top:65.75%;left:12.35%;width:80.52%;height:6.0%'><span
+ style='position:absolute;top:0%;left:6.74%;width:93.25%;height:100.0%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-7.23%'>2.</span>Look for the requested method&#13;</span></div>
+ <div class=B1 style='mso-line-spacing:"90 20 0";mso-margin-left-alt:609;
+ position:absolute;top:72.0%;left:12.35%;width:85.39%;height:6.0%'><span
+ style='position:absolute;top:0%;left:6.35%;width:93.64%;height:100.0%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-6.79%'>3.</span>Call the method with any
+ arguments&#13;</span></div>
+ <div class=B1 style='mso-line-spacing:"90 20 0";mso-margin-left-alt:609;
+ position:absolute;top:78.5%;left:12.35%;width:80.52%;height:6.0%'><span
+ style='position:absolute;top:0%;left:6.74%;width:93.25%;height:100.0%'><span
+ style='mso-special-format:"numbullet3\,1";color:#CC0000;mso-color-index:5;
+ position:absolute;left:-7.23%'>4.</span>Convert and return the result</span></div>
+ </div>
+</p:slide></div>
+
+</body>
+
+</html>
