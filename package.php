@@ -35,6 +35,7 @@ $result = $package->setOptions(array(
     'exceptions'        => array(
          'CREDITS'              => 'doc',
          'EXPERIMENTAL'         => 'doc',
+         'LICENSE'              => 'doc',
          'TODO'                 => 'doc',
     ),
 ));
