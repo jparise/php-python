@@ -94,7 +94,7 @@ OutputStream_writelines(OutputStream *self, PyObject *args)
 	if (iterator == NULL)
 		return NULL;
 
-	while (item = PyIter_Next(iterator)) {
+	while ((item = PyIter_Next(iterator))) {
 		if (PyString_AsStringAndSize(item, &str, &len) != -1) {
 			ZEND_WRITE(str, len);
 			Py_DECREF(item);
@@ -253,8 +253,8 @@ ErrorStream_writelines(ErrorStream *self, PyObject *args)
 	if (iterator == NULL)
 		return NULL;
 
-	while (item = PyIter_Next(iterator)) {
-		if (str = PyString_AsString(item)) {
+	while ((item = PyIter_Next(iterator))) {
+		if ((str = PyString_AsString(item))) {
 			php_error(E_NOTICE, "%s", str);
 			Py_DECREF(item);
 		} else {

@@ -130,8 +130,8 @@ python_num_args(PyObject *callable TSRMLS_DC)
 
 	PHP_PYTHON_THREAD_ACQUIRE();
 
-	if (func_code = PyObject_GetAttrString(callable, "func_code")) {
-		if (co_argcount = PyObject_GetAttrString(func_code, "co_argcount")) {
+	if ((func_code = PyObject_GetAttrString(callable, "func_code"))) {
+		if ((co_argcount = PyObject_GetAttrString(func_code, "co_argcount"))) {
 			num_args = PyInt_AsLong(co_argcount);
 			Py_DECREF(co_argcount);
 		}
@@ -164,8 +164,8 @@ python_get_arg_info(PyObject *callable, zend_arg_info **arg_info TSRMLS_DC)
 	 * The arguments are described by the object's func_code.co_varnames
 	 * member.  They're represented as a Python tuple.
 	 */
-	if (func_code = PyObject_GetAttrString(callable, "func_code")) {
-		if (co_varnames = PyObject_GetAttrString(func_code, "co_varnames")) {
+	if ((func_code = PyObject_GetAttrString(callable, "func_code"))) {
+		if ((co_varnames = PyObject_GetAttrString(func_code, "co_varnames"))) {
 			PyObject *arg;
 			int i, num_vars, start = 0;
 

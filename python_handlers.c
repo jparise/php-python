@@ -605,8 +605,8 @@ python_get_class_name(const zval *object, char **class_name,
 	 * prefix the class name with "Python " to avoid confusion with native PHP
 	 * classes.
 	 */
-	if (attr = PyObject_GetAttrString(pip->object, key)) {
-		if (str = PyObject_Str(attr)) {
+	if ((attr = PyObject_GetAttrString(pip->object, key))) {
+		if ((str = PyObject_Str(attr))) {
 			*class_name_len = sizeof("Python ") + PyString_GET_SIZE(str);
 			*class_name = (char *)emalloc(sizeof(char *) * *class_name_len);
 			zend_sprintf(*class_name, "Python %s", PyString_AS_STRING(str));
