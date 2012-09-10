@@ -86,7 +86,7 @@ pip_hash_to_dict(zval *hash TSRMLS_DC)
 	PyObject *dict, *integer;
 	zval **entry;
 	char *string_key;
-	long num_key;
+	unsigned long num_key;
 
 	PHP_PYTHON_THREAD_ASSERT();
 
@@ -136,7 +136,7 @@ pip_zobject_to_pyobject(zval *obj TSRMLS_DC)
 	PyObject *dict, *str;
 	zval **entry;
 	char *string_key;
-	long num_key;
+	unsigned long num_key;
 
 	PHP_PYTHON_THREAD_ASSERT();
 
@@ -164,7 +164,7 @@ pip_zobject_to_pyobject(zval *obj TSRMLS_DC)
 				PyDict_SetItemString(dict, string_key, item);
 				break;
 			case HASH_KEY_IS_LONG:
-				str = PyString_FromFormat("%d", num_key);
+				str = PyString_FromFormat("%lu", num_key);
 				PyObject_SetItem(dict, str, item);
 				Py_DECREF(str);
 				break;
@@ -309,7 +309,8 @@ pip_mapping_to_hash(PyObject *o, HashTable *ht TSRMLS_DC)
 	PyObject *keys, *key, *str, *item;
 	zval *v;
 	char *name;
-	int i, size, name_len;
+	int i, size;
+	Py_ssize_t name_len;
 	int status = FAILURE;
 
 	PHP_PYTHON_THREAD_ASSERT();
@@ -582,7 +583,7 @@ pip_args_to_tuple(int argc, int start TSRMLS_DC)
 /* {{{ python_str(PyObject *o, char **buffer, int *length)
    Returns the NUL-terminated string representation of a Python object. */
 int
-python_str(PyObject *o, char **buffer, int *length TSRMLS_DC)
+python_str(PyObject *o, char **buffer, Py_ssize_t *length TSRMLS_DC)
 {
 	PyObject *str;
 	int ret = -1;

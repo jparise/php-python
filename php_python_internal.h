@@ -110,6 +110,6 @@ int pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC);
 PyObject * pip_args_to_tuple(int argc, int start TSRMLS_DC);
 
 /* Object Representations */
-int python_str(PyObject *o, char **buffer, int *length TSRMLS_DC);
+int python_str(PyObject *o, char **buffer, Py_ssize_t *length TSRMLS_DC);
 
 #endif /* PHP_PYTHON_INTERNAL_H */

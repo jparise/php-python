@@ -85,7 +85,7 @@ OutputStream_writelines(OutputStream *self, PyObject *args)
 	PyObject *iterator;
 	PyObject *item;
 	char *str;
-	int len;
+	Py_ssize_t len;
 
 	if (!PyArg_ParseTuple(args, "O:writelines", &sequence))
         return NULL;
