@@ -104,9 +104,15 @@ python_object_create(zend_class_entry *ce TSRMLS_DC)
 	pip->ce = ce;
 
 	zend_object_std_init(&pip->base, ce TSRMLS_CC);
-	zend_hash_copy(pip->base.properties, &ce->default_properties,
-				   (copy_ctor_func_t)zval_add_ref,
-				   (void *) &tmp, sizeof(zval *));
+    
+    #if PHP_VERSION_ID < 50399
+        zend_hash_copy(pip->base.properties, &ce->default_properties,
+                       (copy_ctor_func_t)zval_add_ref,
+                       (void *) &tmp, sizeof(zval *));
+    #else
+        object_properties_init(&(pip->base), ce);
+    #endif
+
 
 	/* Add this instance to the objects store using the Zend Objects API. */
 	retval.handle = zend_objects_store_put(pip,
