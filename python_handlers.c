@@ -511,7 +511,9 @@ python_get_method(zval **object_ptr, char *method, int method_len TSRMLS_DC)
 	f->scope = pip->ce;
 	f->fn_flags = 0;
 	f->prototype = NULL;
-	/* f->pass_rest_by_reference = 0; */
+    #if PHP_VERSION_ID < 50400
+        f->pass_rest_by_reference = 0;
+    #endif
 	f->num_args = python_get_arg_info(func, &(f->arg_info) TSRMLS_CC);
 
 	Py_DECREF(func);
